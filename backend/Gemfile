@@ -49,4 +49,7 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # Modular monolith boundary enforcement [https://github.com/Shopify/packwerk]
+  gem "packwerk", "3.3.0"
 end
