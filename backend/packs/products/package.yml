@@ -1,0 +1,7 @@
+# このパックが他のどのパックに依存していいかを明示することを要求する。
+# dependencies に宣言されていないパックへの参照は違反として検出される。
+enforce_dependencies: true
+
+# このパック内のクラスのうち、外部から参照していいものを app/public/ 配下に限定する。
+# app/public/ 以外のクラスを外から参照すると違反として検出される。
+enforce_privacy: true

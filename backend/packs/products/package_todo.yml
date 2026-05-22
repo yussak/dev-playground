@@ -1,0 +1,35 @@
+# This file contains a list of dependencies that are not part of the long term plan for the
+# 'packs/products' package.
+# We should generally work to reduce this list over time.
+#
+# You can regenerate this file using the following command:
+#
+# bin/packwerk update-todo
+---
+".":
+  "::ApplicationRecord":
+    violations:
+    - dependency
+    files:
+    - packs/products/app/models/product.rb
+    - packs/products/app/models/product_image.rb
+  "::CartItem":
+    violations:
+    - dependency
+    files:
+    - packs/products/app/models/product.rb
+  "::Coupon":
+    violations:
+    - dependency
+    files:
+    - packs/products/app/models/product.rb
+  "::OrderItem":
+    violations:
+    - dependency
+    files:
+    - packs/products/app/models/product.rb
+  "::User":
+    violations:
+    - dependency
+    files:
+    - packs/products/app/models/product.rb
