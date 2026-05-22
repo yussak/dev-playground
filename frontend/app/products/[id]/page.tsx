@@ -75,11 +75,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           ))}
         </ul>
       </section>
-      {isOwner && <a href={`/products/${product.id}/edit`}>編集</a>}
-      {isOwner && coupons.length === 0 && (
-        <a href={`/products/${product.id}/coupons/new`}>クーポン作成</a>
+      {isOwner && (
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+          <a
+            href={`/products/${product.id}/edit`}
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            編集
+          </a>
+          {coupons.length === 0 && (
+            <a
+              href={`/products/${product.id}/coupons/new`}
+              style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+            >
+              クーポン作成
+            </a>
+          )}
+          <DeleteButton productId={product.id} />
+        </div>
       )}
-      {isOwner && <DeleteButton productId={product.id} />}
       {isOwner && coupons.length > 0 && (
         <section style={{ marginTop: "2rem" }}>
           <h2>クーポン</h2>
