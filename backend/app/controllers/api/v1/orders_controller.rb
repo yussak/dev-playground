@@ -48,10 +48,13 @@ module Api
           )
 
           active_items.each do |cart_item|
+            variant = cart_item.product_variant
             order.order_items.create!(
-              product: cart_item.product,
-              product_name: cart_item.product.name,
-              unit_price: cart_item.product.price,
+              product_variant: variant,
+              product_name: variant.product.name,
+              size: variant.size,
+              color: variant.color,
+              unit_price: variant.price,
               quantity: cart_item.quantity
             )
           end
@@ -99,11 +102,14 @@ module Api
       end
 
       def order_detail_json(order)
-        items = order.order_items.includes(:product).map do |item|
+        items = order.order_items.includes(product_variant: :product).map do |item|
           {
             id: item.id,
-            product_id: item.product_id,
+            product_variant_id: item.product_variant_id,
+            product_id: item.product_variant&.product_id,
             product_name: item.product_name,
+            size: item.size,
+            color: item.color,
             unit_price: item.unit_price,
             quantity: item.quantity,
             subtotal: item.unit_price * item.quantity

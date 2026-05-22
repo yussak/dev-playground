@@ -233,7 +233,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
   describe "PATCH /api/v1/orders/:id/cancel" do
     let!(:order) do
       order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
-      order.order_items.create!(product: product, product_name: "商品A", unit_price: 1000, quantity: 1)
+      order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
       order
     end
 
@@ -269,7 +269,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       end
       let!(:coupon_order) do
         o = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
-        o.order_items.create!(product: coupon_product, product_name: "対象商品", unit_price: 1000, quantity: 1)
+        o.order_items.create!(product_variant: coupon_variant, product_name: "対象商品", unit_price: 1000, quantity: 1)
         CouponUse.create!(coupon: coupon, user: user, order: o, status: :used)
         o
       end
@@ -296,7 +296,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     before do
       2.times do |i|
         order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
-        order.order_items.create!(product: product, product_name: "商品A", unit_price: 1000, quantity: i + 1)
+        order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: i + 1)
       end
     end
 
@@ -312,7 +312,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
     it "割引が適用された注文は total が割引後の金額になる" do
       discounted = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 150)
-      discounted.order_items.create!(product: product, product_name: "商品A", unit_price: 1000, quantity: 1)
+      discounted.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
 
       get "/api/v1/orders", headers: headers, as: :json
 
@@ -332,7 +332,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
   describe "GET /api/v1/orders/:id" do
     let!(:order) do
       order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
-      order.order_items.create!(product: product, product_name: "商品A", unit_price: 1000, quantity: 2)
+      order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 2)
       order
     end
 
@@ -351,7 +351,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "割引が適用された注文の場合" do
       let!(:discounted_order) do
         o = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
-        o.order_items.create!(product: product, product_name: "商品A", unit_price: 1000, quantity: 1)
+        o.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
         o
       end
 
