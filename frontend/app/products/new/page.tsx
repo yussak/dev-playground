@@ -69,9 +69,9 @@ export default function NewProductPage() {
           />
         </div>
 
-        <h2 style={{ fontSize: "1.1rem" }}>バリアント</h2>
+        <h2 style={{ fontSize: "1.1rem" }}>商品オプション</h2>
         <p style={{ fontSize: "0.85rem", color: "#666" }}>
-          サイズ・カラーは任意（バリアントなしの商品は両方空欄で1件登録）。サイズ・カラーの有無は全バリアントで揃える必要があります。
+          サイズ・カラーは任意（オプションなしの商品は両方空欄で1件登録）。サイズ・カラーの有無は全オプションで揃える必要があります。
         </p>
         {variants.map((v, i) => (
           <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", alignItems: "center" }}>
@@ -90,8 +90,8 @@ export default function NewProductPage() {
               style={{ flex: 1 }}
             />
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="numeric"
               placeholder="価格"
               value={v.price}
               onChange={(e) => updateVariant(i, "price", e.target.value)}
@@ -106,7 +106,7 @@ export default function NewProductPage() {
           </div>
         ))}
         <button type="button" onClick={addVariant} style={{ marginBottom: "1rem" }}>
-          バリアントを追加
+          商品オプションを追加
         </button>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
