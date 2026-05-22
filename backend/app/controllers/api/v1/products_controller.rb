@@ -38,10 +38,7 @@ module Api
 
         variants = variants_param
         ActiveRecord::Base.transaction do
-          if variants
-            replace_variants(product, variants)
-            product.price = product.product_variants.reload.map(&:price).min
-          end
+          replace_variants(product, variants) if variants
           product.assign_attributes(product_attributes)
           product.save!
         end
@@ -63,7 +60,6 @@ module Api
         variants.each do |attrs|
           product.product_variants.build(attrs.slice(:size, :color, :price))
         end
-        product.price = variants.map { |v| v[:price].to_i }.min
 
         if product.save
           render json: product_detail_json(product), status: :created

@@ -10,7 +10,7 @@ RSpec.describe "Api::V1::Products", type: :request do
 
   describe "GET /api/v1/products/:id" do
     let!(:product) do
-      product = Product.create!(name: "商品A", description: "説明A", price: 1000, user: user)
+      product = Product.create!(name: "商品A", description: "説明A", user: user)
       product.product_variants.create!(size: "M", color: "red", price: 1000)
       product.product_variants.create!(size: "L", color: "red", price: 1500)
       product
@@ -41,7 +41,7 @@ RSpec.describe "Api::V1::Products", type: :request do
   describe "DELETE /api/v1/products/:id" do
     let!(:owner) { User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
     let!(:other) { User.create!(name: "他ユーザー", email: "other@example.com", password: "password123") }
-    let!(:product) { Product.create!(name: "削除対象商品", description: "説明", price: 1000, user: owner) }
+    let!(:product) { Product.create!(name: "削除対象商品", description: "説明", user: owner) }
 
     context "出品者本人の場合" do
       it "200 を返し商品が削除される" do
@@ -205,7 +205,7 @@ RSpec.describe "Api::V1::Products", type: :request do
 
   describe "PATCH /api/v1/products/:id" do
     let!(:product) do
-      p = Product.create!(name: "商品A", description: "説明A", price: 1000, user: user)
+      p = Product.create!(name: "商品A", description: "説明A", user: user)
       p.product_variants.create!(size: "M", color: "red", price: 1000)
       p.product_variants.create!(size: "L", color: "red", price: 1500)
       p
@@ -247,11 +247,11 @@ RSpec.describe "Api::V1::Products", type: :request do
   describe "GET /api/v1/products" do
     context "商品が存在する場合" do
       before do
-        a = Product.create!(name: "商品A", description: "説明A", price: 1000, user: user)
+        a = Product.create!(name: "商品A", description: "説明A", user: user)
         a.product_variants.create!(size: "M", price: 1000)
         a.product_variants.create!(size: "L", price: 1500)
 
-        b = Product.create!(name: "商品B", description: nil, price: 2000, user: user)
+        b = Product.create!(name: "商品B", description: nil, user: user)
         b.product_variants.create!(price: 2000)
       end
 
