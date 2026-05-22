@@ -66,15 +66,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       {product.description && <p>説明: {product.description}</p>}
       <section>
         <h2 style={{ fontSize: "1.1rem" }}>バリアント</h2>
-        <ul>
+        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
           {product.variants.map((v) => (
-            <li key={v.id}>
+            <li key={v.id} style={{ marginBottom: "0.5rem" }}>
               {variantLabel(v)} — {v.price}円
+              <AddToCartButton productVariantId={v.id} />
             </li>
           ))}
         </ul>
       </section>
-      <AddToCartButton productId={product.id} />
       {isOwner && <a href={`/products/${product.id}/edit`}>編集</a>}
       {isOwner && coupons.length === 0 && (
         <a href={`/products/${product.id}/coupons/new`}>クーポン作成</a>

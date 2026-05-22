@@ -2,7 +2,7 @@ class Product < ApplicationRecord
   belongs_to :user
   has_many :product_images, dependent: :destroy
   has_many :product_variants, dependent: :destroy
-  has_many :cart_items, dependent: :destroy
+  has_many :cart_items, through: :product_variants
   has_many :order_items, dependent: :nullify
   has_one :coupon, dependent: :destroy
 

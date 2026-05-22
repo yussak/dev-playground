@@ -3,10 +3,10 @@
 import { apiFetch } from "@/lib/api";
 import { revalidatePath } from "next/cache";
 
-export async function addToCart(productId: number) {
+export async function addToCart(productVariantId: number) {
   const res = await apiFetch("/api/v1/cart/items", {
     method: "POST",
-    body: JSON.stringify({ product_id: productId }),
+    body: JSON.stringify({ product_variant_id: productVariantId }),
   });
   if (!res.ok) {
     const data = await res.json();

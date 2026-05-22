@@ -3,7 +3,9 @@ require "rails_helper"
 RSpec.describe "Api::V1::Orders", type: :request do
   let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", price: 1000, user: user) }
+  let!(:variant) { product.product_variants.create!(price: 1000) }
   let!(:product2) { Product.create!(name: "商品B", price: 2000, user: user) }
+  let!(:variant2) { product2.product_variants.create!(price: 2000) }
   let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
 
   def auth_header(u)
@@ -14,8 +16,8 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "カートにアイテムがある場合" do
       before do
         cart = user.create_cart!
-        cart.cart_items.create!(product: product, quantity: 2)
-        cart.cart_items.create!(product: product2, quantity: 1)
+        cart.cart_items.create!(product_variant: variant, quantity: 2)
+        cart.cart_items.create!(product_variant: variant2, quantity: 1)
       end
 
       it "注文が作成され、カートが空になる" do
@@ -54,7 +56,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       before do
         product.deleted!
         cart = user.create_cart!
-        cart.cart_items.create!(product: product, quantity: 1)
+        cart.cart_items.create!(product_variant: variant, quantity: 1)
       end
 
       it "422を返す" do
@@ -75,6 +77,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "クーポンを適用する場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", price: 1000, user: seller) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
 
       context "固定額クーポン" do
         let!(:coupon) do
@@ -83,7 +86,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         before do
           cart = user.create_cart!
-          cart.cart_items.create!(product: coupon_product, quantity: 1)
+          cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
         it "割引額が適用され coupon_use が記録される" do
@@ -136,7 +139,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         before do
           cart = user.create_cart!
-          cart.cart_items.create!(product: coupon_product, quantity: 1)
+          cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
         it "商品金額に対して割引率が適用される" do
@@ -157,7 +160,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       context "クーポンが無効な場合" do
         before do
           cart = user.create_cart!
-          cart.cart_items.create!(product: coupon_product, quantity: 1)
+          cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
         it "存在しないコードならエラー" do
@@ -198,7 +201,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         before do
           cart = user.create_cart!
-          cart.cart_items.create!(product: product, quantity: 1)
+          cart.cart_items.create!(product_variant: variant, quantity: 1)
         end
 
         it "エラーになる" do
@@ -213,7 +216,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       context "クーポンコードなしの場合" do
         before do
           cart = user.create_cart!
-          cart.cart_items.create!(product: coupon_product, quantity: 1)
+          cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
         it "通常通り注文できる（discount_amount は 0）" do
@@ -260,6 +263,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "クーポンが適用された注文の場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", price: 1000, user: seller) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
       let!(:coupon) do
         Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end
@@ -280,7 +284,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         patch "/api/v1/orders/#{coupon_order.id}/cancel", headers: headers, as: :json
 
         cart = user.cart || user.create_cart!
-        cart.cart_items.create!(product: coupon_product, quantity: 1)
+        cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
 
         post "/api/v1/orders", params: { coupon_code: "CANCELME12" }, headers: headers, as: :json
         expect(response).to have_http_status(:created)

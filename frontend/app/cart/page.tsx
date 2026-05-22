@@ -7,7 +7,10 @@ import PlaceOrderButton from "./PlaceOrderButton";
 type CartItem = {
   id: number;
   product_id: number;
+  product_variant_id: number;
   product_name: string;
+  size: string | null;
+  color: string | null;
   unit_price: number;
   quantity: number;
   subtotal: number;

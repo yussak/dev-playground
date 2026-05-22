@@ -21,7 +21,7 @@ module Api
           return render json: { error: "カートが空です" }, status: :unprocessable_entity
         end
 
-        active_items = cart.cart_items.includes(:product).select { |item| item.product.active? }
+        active_items = cart.cart_items.includes(product_variant: :product).select { |item| item.product.active? }
         if active_items.empty?
           return render json: { error: "注文可能な商品がありません" }, status: :unprocessable_entity
         end
