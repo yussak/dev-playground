@@ -15,15 +15,20 @@ module Api
       private
 
       def cart_json(cart)
-        items = cart.cart_items.includes(:product).map do |item|
+        items = cart.cart_items.includes(product_variant: :product).map do |item|
+          variant = item.product_variant
+          product = variant.product
           {
             id: item.id,
-            product_id: item.product.id,
-            product_name: item.product.name,
-            unit_price: item.product.price,
+            product_id: product.id,
+            product_variant_id: variant.id,
+            product_name: product.name,
+            size: variant.size,
+            color: variant.color,
+            unit_price: variant.price,
             quantity: item.quantity,
-            subtotal: item.product.price * item.quantity,
-            product_deleted: item.product.deleted?
+            subtotal: variant.price * item.quantity,
+            product_deleted: product.deleted?
           }
         end
 

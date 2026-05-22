@@ -3,7 +3,13 @@
 import { apiFetch } from "@/lib/api";
 import { redirect } from "next/navigation";
 
-export async function createProduct(formData: { name: string; description: string | null; price: number }) {
+type VariantPayload = { size: string | null; color: string | null; price: number };
+
+export async function createProduct(formData: {
+  name: string;
+  description: string | null;
+  variants: VariantPayload[];
+}) {
   const res = await apiFetch("/api/v1/products", {
     method: "POST",
     body: JSON.stringify(formData),

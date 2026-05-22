@@ -20,7 +20,7 @@ class Coupon < ApplicationRecord
     target_item = cart_items.find { |ci| ci.product_id == product_id }
     return 0 unless target_item
 
-    subtotal = target_item.product.price * target_item.quantity
+    subtotal = target_item.product_variant.price * target_item.quantity
     raw = case discount_type
     when "fixed"      then discount_value
     when "percentage" then subtotal * discount_value / 100

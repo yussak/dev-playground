@@ -6,13 +6,25 @@ import DeleteCouponButton from "./coupons/DeleteCouponButton";
 import CopyCouponCodeButton from "./coupons/CopyCouponCodeButton";
 import AddToCartButton from "../../cart/AddToCartButton";
 
+type Variant = {
+  id: number;
+  size: string | null;
+  color: string | null;
+  price: number;
+};
+
 type Product = {
   id: number;
   name: string;
   description: string | null;
-  price: number;
   user_id: number;
+  variants: Variant[];
 };
+
+function variantLabel(v: Variant): string {
+  const parts = [v.size, v.color].filter(Boolean);
+  return parts.length > 0 ? parts.join(" / ") : "標準";
+}
 
 type Coupon = {
   id: number;
@@ -51,14 +63,37 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
       <h1>{product.name}</h1>
-      <p>価格: {product.price}円</p>
       {product.description && <p>説明: {product.description}</p>}
-      <AddToCartButton productId={product.id} />
-      {isOwner && <a href={`/products/${product.id}/edit`}>編集</a>}
-      {isOwner && coupons.length === 0 && (
-        <a href={`/products/${product.id}/coupons/new`}>クーポン作成</a>
+      <section>
+        <h2 style={{ fontSize: "1.1rem" }}>バリアント</h2>
+        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+          {product.variants.map((v) => (
+            <li key={v.id} style={{ marginBottom: "0.5rem" }}>
+              {variantLabel(v)} — {v.price}円
+              <AddToCartButton productVariantId={v.id} />
+            </li>
+          ))}
+        </ul>
+      </section>
+      {isOwner && (
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+          <a
+            href={`/products/${product.id}/edit`}
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            編集
+          </a>
+          {coupons.length === 0 && (
+            <a
+              href={`/products/${product.id}/coupons/new`}
+              style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+            >
+              クーポン作成
+            </a>
+          )}
+          <DeleteButton productId={product.id} />
+        </div>
       )}
-      {isOwner && <DeleteButton productId={product.id} />}
       {isOwner && coupons.length > 0 && (
         <section style={{ marginTop: "2rem" }}>
           <h2>クーポン</h2>

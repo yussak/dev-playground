@@ -6,12 +6,20 @@ import { updateCartItemQuantity, removeCartItem } from "./actions";
 type CartItem = {
   id: number;
   product_id: number;
+  product_variant_id: number;
   product_name: string;
+  size: string | null;
+  color: string | null;
   unit_price: number;
   quantity: number;
   subtotal: number;
   product_deleted: boolean;
 };
+
+function variantLabel(item: CartItem): string {
+  const parts = [item.size, item.color].filter(Boolean);
+  return parts.length > 0 ? `（${parts.join(" / ")}）` : "";
+}
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const [loading, setLoading] = useState(false);
@@ -41,7 +49,8 @@ export default function CartItemRow({ item }: { item: CartItem }) {
     return (
       <tr style={{ color: "#999" }}>
         <td style={{ padding: "0.5rem" }}>
-          {item.product_name}（この商品は削除されました）
+          {item.product_name}
+          {variantLabel(item)}（この商品は削除されました）
         </td>
         <td colSpan={3}></td>
         <td style={{ padding: "0.5rem" }}>
@@ -53,7 +62,10 @@ export default function CartItemRow({ item }: { item: CartItem }) {
 
   return (
     <tr>
-      <td style={{ padding: "0.5rem" }}>{item.product_name}</td>
+      <td style={{ padding: "0.5rem" }}>
+        {item.product_name}
+        {variantLabel(item) && <span style={{ color: "#666", marginLeft: "0.25rem" }}>{variantLabel(item)}</span>}
+      </td>
       <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.unit_price}円</td>
       <td style={{ textAlign: "center", padding: "0.5rem" }}>
         <button onClick={() => handleQuantityChange(-1)} disabled={loading || item.quantity <= 1}>−</button>

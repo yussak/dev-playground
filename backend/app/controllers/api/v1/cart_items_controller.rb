@@ -5,13 +5,15 @@ module Api
 
       def create
         cart = @current_user.cart || @current_user.create_cart!
-        product = Product.active.find(params[:product_id])
+        variant = ProductVariant.joins(:product)
+                                .where(products: { status: "active" })
+                                .find(params[:product_variant_id])
 
-        cart_item = cart.cart_items.find_by(product: product)
+        cart_item = cart.cart_items.find_by(product_variant: variant)
         if cart_item
           cart_item.increment!(:quantity)
         else
-          cart_item = cart.cart_items.create!(product: product, quantity: 1)
+          cart_item = cart.cart_items.create!(product_variant: variant, quantity: 1)
         end
 
         render json: cart_item, status: :created

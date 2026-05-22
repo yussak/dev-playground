@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { addToCart } from "./actions";
 
-export default function AddToCartButton({ productId }: { productId: number }) {
+export default function AddToCartButton({
+  productVariantId,
+  label = "カートに追加",
+}: {
+  productVariantId: number;
+  label?: string;
+}) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -15,7 +21,7 @@ export default function AddToCartButton({ productId }: { productId: number }) {
     setLoading(true);
     setMessage(null);
     try {
-      await addToCart(productId);
+      await addToCart(productVariantId);
       setMessage("カートに追加しました");
       setTimeout(() => setMessage(null), 2000);
     } catch (e) {
@@ -27,7 +33,7 @@ export default function AddToCartButton({ productId }: { productId: number }) {
   return (
     <span>
       <button onClick={handleClick} disabled={loading} style={{ marginLeft: "0.5rem" }}>
-        {loading ? "追加中..." : "カートに追加"}
+        {loading ? "追加中..." : label}
       </button>
       {message && <span style={{ marginLeft: "0.5rem", color: message.includes("エラー") ? "red" : "green" }}>{message}</span>}
     </span>

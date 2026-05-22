@@ -6,12 +6,20 @@ import CancelOrderButton from "./CancelOrderButton";
 
 type OrderItem = {
   id: number;
-  product_id: number;
+  product_id: number | null;
+  product_variant_id: number | null;
   product_name: string;
+  size: string | null;
+  color: string | null;
   unit_price: number;
   quantity: number;
   subtotal: number;
 };
+
+function variantLabel(item: OrderItem): string {
+  const parts = [item.size, item.color].filter(Boolean);
+  return parts.length > 0 ? `（${parts.join(" / ")}）` : "";
+}
 
 type OrderDetail = {
   id: number;
@@ -67,9 +75,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {order.items.map((item) => (
             <tr key={item.id}>
               <td style={{ padding: "0.5rem" }}>
-                <Link href={`/products/${item.product_id}`} style={{ color: "blue", textDecoration: "underline" }}>
-                  {item.product_name}
-                </Link>
+                {item.product_id ? (
+                  <Link href={`/products/${item.product_id}`} style={{ color: "blue", textDecoration: "underline" }}>
+                    {item.product_name}
+                  </Link>
+                ) : (
+                  item.product_name
+                )}
+                {variantLabel(item) && (
+                  <span style={{ color: "#666", marginLeft: "0.25rem" }}>{variantLabel(item)}</span>
+                )}
               </td>
               <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.unit_price}円</td>
               <td style={{ textAlign: "center", padding: "0.5rem" }}>{item.quantity}</td>
