@@ -3,12 +3,19 @@ import { auth } from "@/auth";
 import { apiFetch } from "@/lib/api";
 import EditForm from "./EditForm";
 
+type Variant = {
+  id: number;
+  size: string | null;
+  color: string | null;
+  price: number;
+};
+
 type Product = {
   id: number;
   name: string;
   description: string | null;
-  price: number;
   user_id: number;
+  variants: Variant[];
 };
 
 async function fetchProduct(id: string): Promise<Product | null> {
@@ -28,7 +35,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   if (currentUserId !== String(product.user_id)) notFound();
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "400px" }}>
+    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "600px" }}>
       <h1>商品を編集</h1>
       <EditForm product={product} />
       <p>

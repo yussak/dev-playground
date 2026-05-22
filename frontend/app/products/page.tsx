@@ -9,9 +9,17 @@ type Product = {
   id: number;
   name: string;
   description: string | null;
-  price: number;
+  min_price: number;
+  max_price: number;
   user_id: number;
 };
+
+function formatPrice(product: Product): string {
+  if (product.min_price === product.max_price) {
+    return `${product.min_price}円`;
+  }
+  return `${product.min_price}円 〜 ${product.max_price}円`;
+}
 
 async function fetchProducts(): Promise<Product[]> {
   const res = await apiFetch("/api/v1/products", { cache: "no-store" });
@@ -36,7 +44,7 @@ export default async function ProductsPage() {
               <Link href={`/products/${product.id}`} style={{ color: "blue", textDecoration: "underline" }}>
                 <strong>{product.name}</strong>
               </Link>{" "}
-              — {product.price}円
+              — {formatPrice(product)}
               {product.description && <p>{product.description}</p>}
               <AddToCartButton productId={product.id} />
               {currentUserId === String(product.user_id) && <DeleteButton productId={product.id} />}

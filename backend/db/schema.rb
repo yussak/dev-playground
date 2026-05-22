@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_12_112220) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_22_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -98,6 +98,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_112220) do
     t.index ["product_id"], name: "index_product_images_on_product_id"
   end
 
+  create_table "product_variants", force: :cascade do |t|
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.integer "price", null: false
+    t.bigint "product_id", null: false
+    t.string "size"
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "color"], name: "idx_product_variants_color_only", unique: true, where: "((size IS NULL) AND (color IS NOT NULL))"
+    t.index ["product_id", "size", "color"], name: "idx_product_variants_size_and_color", unique: true, where: "((size IS NOT NULL) AND (color IS NOT NULL))"
+    t.index ["product_id", "size"], name: "idx_product_variants_size_only", unique: true, where: "((size IS NOT NULL) AND (color IS NULL))"
+    t.index ["product_id"], name: "idx_product_variants_no_axis", unique: true, where: "((size IS NULL) AND (color IS NULL))"
+    t.index ["product_id"], name: "index_product_variants_on_product_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -129,5 +143,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_112220) do
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "users"
   add_foreign_key "product_images", "products"
+  add_foreign_key "product_variants", "products"
   add_foreign_key "products", "users"
 end

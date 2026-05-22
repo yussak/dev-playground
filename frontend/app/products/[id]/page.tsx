@@ -6,13 +6,25 @@ import DeleteCouponButton from "./coupons/DeleteCouponButton";
 import CopyCouponCodeButton from "./coupons/CopyCouponCodeButton";
 import AddToCartButton from "../../cart/AddToCartButton";
 
+type Variant = {
+  id: number;
+  size: string | null;
+  color: string | null;
+  price: number;
+};
+
 type Product = {
   id: number;
   name: string;
   description: string | null;
-  price: number;
   user_id: number;
+  variants: Variant[];
 };
+
+function variantLabel(v: Variant): string {
+  const parts = [v.size, v.color].filter(Boolean);
+  return parts.length > 0 ? parts.join(" / ") : "標準";
+}
 
 type Coupon = {
   id: number;
@@ -51,8 +63,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
       <h1>{product.name}</h1>
-      <p>価格: {product.price}円</p>
       {product.description && <p>説明: {product.description}</p>}
+      <section>
+        <h2 style={{ fontSize: "1.1rem" }}>バリアント</h2>
+        <ul>
+          {product.variants.map((v) => (
+            <li key={v.id}>
+              {variantLabel(v)} — {v.price}円
+            </li>
+          ))}
+        </ul>
+      </section>
       <AddToCartButton productId={product.id} />
       {isOwner && <a href={`/products/${product.id}/edit`}>編集</a>}
       {isOwner && coupons.length === 0 && (

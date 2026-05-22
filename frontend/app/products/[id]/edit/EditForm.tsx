@@ -3,26 +3,63 @@
 import { useState, FormEvent } from "react";
 import { updateProduct } from "./actions";
 
+type Variant = {
+  id: number;
+  size: string | null;
+  color: string | null;
+  price: number;
+};
+
+type VariantInput = { id: number | null; size: string; color: string; price: string };
+
 type Props = {
   product: {
     id: number;
     name: string;
     description: string | null;
-    price: number;
+    variants: Variant[];
   };
 };
 
 export default function EditForm({ product }: Props) {
   const [name, setName] = useState(product.name);
   const [description, setDescription] = useState(product.description ?? "");
-  const [price, setPrice] = useState(String(product.price));
+  const [variants, setVariants] = useState<VariantInput[]>(
+    product.variants.map((v) => ({
+      id: v.id,
+      size: v.size ?? "",
+      color: v.color ?? "",
+      price: String(v.price),
+    }))
+  );
   const [error, setError] = useState<string | null>(null);
+
+  function updateVariant(index: number, key: keyof Omit<VariantInput, "id">, value: string) {
+    setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [key]: value } : v)));
+  }
+
+  function addVariant() {
+    setVariants((prev) => [...prev, { id: null, size: "", color: "", price: "" }]);
+  }
+
+  function removeVariant(index: number) {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      await updateProduct(product.id, { name, description: description || null, price: Number(price) });
+      await updateProduct(product.id, {
+        name,
+        description: description || null,
+        variants: variants.map((v) => ({
+          id: v.id,
+          size: v.size || null,
+          color: v.color || null,
+          price: Number(v.price),
+        })),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "商品の更新に失敗しました");
     }
@@ -52,21 +89,51 @@ export default function EditForm({ product }: Props) {
           style={{ width: "100%", marginBottom: "1rem" }}
         />
       </div>
-      <div>
-        <label htmlFor="price">価格（円）</label>
-        <br />
-        <input
-          id="price"
-          type="number"
-          min="0"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "1rem" }}
-        />
-      </div>
+
+      <h2 style={{ fontSize: "1.1rem" }}>バリアント</h2>
+      <p style={{ fontSize: "0.85rem", color: "#666" }}>
+        ここから外したバリアントは削除されます。サイズ・カラーの有無は全バリアントで揃える必要があります。
+      </p>
+      {variants.map((v, i) => (
+        <div key={i} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="サイズ（任意）"
+            value={v.size}
+            onChange={(e) => updateVariant(i, "size", e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <input
+            type="text"
+            placeholder="カラー（任意）"
+            value={v.color}
+            onChange={(e) => updateVariant(i, "color", e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <input
+            type="number"
+            min="0"
+            placeholder="価格"
+            value={v.price}
+            onChange={(e) => updateVariant(i, "price", e.target.value)}
+            required
+            style={{ flex: 1 }}
+          />
+          {variants.length > 1 && (
+            <button type="button" onClick={() => removeVariant(i)}>
+              削除
+            </button>
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={addVariant} style={{ marginBottom: "1rem" }}>
+        バリアントを追加
+      </button>
+
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <button type="submit">更新する</button>
+      <div>
+        <button type="submit">更新する</button>
+      </div>
     </form>
   );
 }
