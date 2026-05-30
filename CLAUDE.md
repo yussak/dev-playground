@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 ## 基本方針
 
 - Kent Beck（Tidy First, TDD）・Martin Fowler（Refactoring）の方針に従う
