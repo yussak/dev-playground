@@ -75,6 +75,15 @@ RSpec.describe "Api::V1::Cart", type: :request do
         )
         expect(body["total"]).to eq(2000)
       end
+
+      it "各 cart_item に該当商品オプションの在庫数 stock が含まれる" do
+        variant.stock.update!(quantity: 5)
+
+        get "/api/v1/cart", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["items"].first["stock"]).to eq(5)
+      end
     end
 
     context "カートが空の場合" do

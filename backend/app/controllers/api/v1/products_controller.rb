@@ -104,7 +104,8 @@ module Api
           description: product.description,
           min_price: prices.min,
           max_price: prices.max,
-          user_id: product.user_id
+          user_id: product.user_id,
+          total_stock: product.total_stock
         }
       end
 

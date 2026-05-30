@@ -103,6 +103,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </a>
           )}
           <DeleteButton productId={product.id} />
+          <a
+            href="/products"
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            商品一覧に戻る
+          </a>
         </div>
       )}
       {isOwner && coupons.length > 0 && (

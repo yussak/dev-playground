@@ -15,7 +15,7 @@ module Api
       private
 
       def cart_json(cart)
-        items = cart.cart_items.includes(product_variant: :product).map do |item|
+        items = cart.cart_items.includes(product_variant: [ :product, :stock ]).map do |item|
           variant = item.product_variant
           product = variant.product
           {
@@ -28,7 +28,8 @@ module Api
             unit_price: variant.price,
             quantity: item.quantity,
             subtotal: variant.price * item.quantity,
-            product_deleted: product.deleted?
+            product_deleted: product.deleted?,
+            stock: variant.stock&.quantity || 0
           }
         end
 

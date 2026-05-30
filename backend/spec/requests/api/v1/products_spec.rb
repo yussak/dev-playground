@@ -8,6 +8,23 @@ RSpec.describe "Api::V1::Products", type: :request do
     { "Authorization" => "Bearer #{token}" }
   end
 
+  describe "GET /api/v1/products" do
+    it "各商品に total_stock が含まれる" do
+      product = Product.create!(name: "商品A", user: user)
+      v1 = product.product_variants.create!(price: 1000)
+      v2 = product.product_variants.create!(size: "L", color: "red", price: 1500)
+      v1.stock.update!(quantity: 3)
+      v2.stock.update!(quantity: 7)
+
+      get "/api/v1/products", as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      entry = body.find { |p| p["id"] == product.id }
+      expect(entry["total_stock"]).to eq(10)
+    end
+  end
+
   describe "GET /api/v1/products/:id" do
     let!(:product) do
       product = Product.create!(name: "商品A", description: "説明A", user: user)

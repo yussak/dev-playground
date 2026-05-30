@@ -15,6 +15,7 @@ type CartItem = {
   quantity: number;
   subtotal: number;
   product_deleted: boolean;
+  stock: number;
 };
 
 type CartResponse = {

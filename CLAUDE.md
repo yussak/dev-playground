@@ -2,6 +2,7 @@
 
 ## 基本方針
 
+- Kent Beck（Tidy First, TDD）・Martin Fowler（Refactoring）の方針に従う
 - 複数案を提示する際には推奨度（Max星５つ）とその理由も添える
 - 変更前に必ず対象ファイルを読んでから編集すること
 - 求められていない機能追加・リファクタリング・コメント追加は行わない
@@ -12,7 +13,7 @@
 
 - Ruby: `rubocop-rails-omakase` に従う（`.rubocop.yml` 参照）
 - TypeScript: 既存の `tsconfig.json` の設定に従う
-- 新しい抽象化・ヘルパーは本当に必要な場合のみ作成する
+
 
 ## セキュリティ
 
