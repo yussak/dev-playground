@@ -12,7 +12,7 @@ module Api
 
         cart_item = cart.cart_items.find_by(product_variant: variant)
         current_quantity = cart_item&.quantity || 0
-        stock_quantity = variant.stock&.quantity || 0
+        stock_quantity = variant.stock&.quantity || Stock::DEFAULT_QUANTITY
         if current_quantity + 1 > stock_quantity
           return render json: { error: "在庫が不足しています" }, status: :unprocessable_entity
         end
@@ -31,7 +31,7 @@ module Api
       def update
         cart_item = find_cart_item
         new_quantity = params[:quantity].to_i
-        stock_quantity = cart_item.product_variant.stock&.quantity || 0
+        stock_quantity = cart_item.product_variant.stock&.quantity || Stock::DEFAULT_QUANTITY
         if new_quantity > stock_quantity
           return render json: { error: "在庫が不足しています" }, status: :unprocessable_entity
         end

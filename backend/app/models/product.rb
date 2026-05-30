@@ -12,7 +12,7 @@ class Product < ApplicationRecord
   validate :variants_pattern_consistency
 
   def total_stock
-    product_variants.includes(:stock).sum { |v| v.stock&.quantity.to_i }
+    product_variants.includes(:stock).sum { |v| v.stock&.quantity || Stock::DEFAULT_QUANTITY }
   end
 
   private

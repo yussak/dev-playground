@@ -116,7 +116,7 @@ module Api
           description: product.description,
           user_id: product.user_id,
           variants: product.product_variants.order(:id).map do |v|
-            { id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock&.quantity || 0 }
+            { id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock&.quantity || Stock::DEFAULT_QUANTITY }
           end
         }
       end

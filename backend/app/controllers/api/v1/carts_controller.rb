@@ -17,7 +17,7 @@ module Api
 
       def sync_stock_status(cart)
         cart.cart_items.includes(product_variant: :stock).each do |item|
-          stock_quantity = item.product_variant.stock&.quantity || 0
+          stock_quantity = item.product_variant.stock&.quantity || Stock::DEFAULT_QUANTITY
           if stock_quantity < 1
             item.unavailable! unless item.unavailable?
           else
@@ -41,7 +41,7 @@ module Api
             quantity: item.quantity,
             subtotal: variant.price * item.quantity,
             product_deleted: product.deleted?,
-            stock: variant.stock&.quantity || 0,
+            stock: variant.stock&.quantity || Stock::DEFAULT_QUANTITY,
             status: item.status
           }
         end
