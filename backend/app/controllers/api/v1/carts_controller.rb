@@ -18,7 +18,7 @@ module Api
       def sync_stock_status(cart)
         cart.cart_items.includes(product_variant: :stock).each do |item|
           stock_quantity = item.product_variant.stock&.quantity || Stock::DEFAULT_QUANTITY
-          if stock_quantity < 1
+          if stock_quantity <= 0
             item.unavailable! unless item.unavailable?
           else
             item.active! if item.unavailable?
