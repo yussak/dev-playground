@@ -76,7 +76,7 @@ export default function CartItemRow({ item }: { item: CartItem }) {
       <td style={{ textAlign: "center", padding: "0.5rem" }}>
         <button onClick={() => handleQuantityChange(-1)} disabled={loading || item.quantity <= 1}>−</button>
         <span style={{ margin: "0 0.5rem" }}>{item.quantity}</span>
-        <button onClick={() => handleQuantityChange(1)} disabled={loading}>＋</button>
+        <button onClick={() => handleQuantityChange(1)} disabled={loading || item.quantity >= item.stock}>＋</button>
       </td>
       <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.subtotal}円</td>
       <td style={{ padding: "0.5rem" }}>

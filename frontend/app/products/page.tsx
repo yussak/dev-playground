@@ -58,7 +58,6 @@ export default async function ProductsPage() {
                 )}
                 {product.description && <p>{product.description}</p>}
                 {currentUserId === String(product.user_id) && <DeleteButton productId={product.id} />}
-                <span>デバッグ用：user_id={product.user_id}</span>
               </li>
             );
           })}

@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Cart", type: :request do
   let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: user) }
-  let!(:variant) { product.product_variants.create!(size: "M", color: "red", price: 1000) }
+  let!(:variant) { product.product_variants.create!(size: "M", color: "red", price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
   let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
 
   def auth_header(u)
@@ -39,6 +39,25 @@ RSpec.describe "Api::V1::Cart", type: :request do
         post "/api/v1/cart/items", params: { product_variant_id: 99999 }, headers: headers, as: :json
 
         expect(response).to have_http_status(:not_found)
+      end
+
+      it "在庫が0の場合は422を返す" do
+        variant.stock.update!(quantity: 0)
+        post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(user.cart&.cart_items&.count.to_i).to eq(0)
+      end
+
+      it "既存のカート数量+1が在庫を超える場合は422を返す" do
+        variant.stock.update!(quantity: 2)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 2)
+
+        post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(cart.cart_items.first.quantity).to eq(2)
       end
     end
 
@@ -122,6 +141,14 @@ RSpec.describe "Api::V1::Cart", type: :request do
         patch "/api/v1/cart/items/#{cart_item.id}", params: { quantity: 0 }, headers: headers, as: :json
 
         expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "在庫を超える数量は422を返す" do
+        variant.stock.update!(quantity: 3)
+        patch "/api/v1/cart/items/#{cart_item.id}", params: { quantity: 4 }, headers: headers, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(cart_item.reload.quantity).to eq(2)
       end
 
       it "他ユーザーのカートアイテムは変更できない" do

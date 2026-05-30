@@ -91,3 +91,27 @@ TODO: `docs/inventory-todo.md`
 - カート追加 API での在庫チェック → スライス 3
 - 「現在購入できません」セクションへの自動移動 → スライス 5
 - 残り N 点の具体的な在庫数表示（「残り N 点」） → スライス 8
+
+## スライス 3: カート追加時の在庫チェック
+
+### API: カート追加 (`Api::V1::CartItemsController#create`)
+
+- 在庫チェックを追加する
+  - 既存の cart_item の数量 + 追加分 1 が `variant.stock.quantity` を超える場合はエラー
+  - 在庫切れ (`stock.quantity == 0`) は同じロジックで弾かれる
+- エラー時のレスポンス: 422 と `error: "在庫が不足しています"`
+
+### API: カート数量変更 (`Api::V1::CartItemsController#update`)
+
+- 在庫チェックを追加する
+  - リクエストで指定された quantity が `variant.stock.quantity` を超える場合はエラー
+- エラー時のレスポンス: 422 と `error: "在庫が不足しています"`
+
+### フロント: カート画面
+
+- 各 cart_item 行で、`item.quantity >= item.stock` のとき「＋」ボタンを非活性にする
+
+### スライス 3 で扱わない範囲
+
+- 「現在購入できません」セクションへの自動移動 → スライス 5
+- キャンセル時の在庫加算 → スライス 4
