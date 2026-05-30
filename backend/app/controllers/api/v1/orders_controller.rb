@@ -21,9 +21,17 @@ module Api
           return render json: { error: "カートが空です" }, status: :unprocessable_entity
         end
 
-        active_items = cart.cart_items.includes(product_variant: :product).select { |item| item.product.active? }
+        active_items = cart.cart_items.includes(product_variant: [ :product, :stock ]).select { |item| item.product.active? }
         if active_items.empty?
           return render json: { error: "注文可能な商品がありません" }, status: :unprocessable_entity
+        end
+
+        insufficient = active_items.any? do |item|
+          stock = item.product_variant.stock
+          stock.nil? || stock.quantity < item.quantity
+        end
+        if insufficient
+          return render json: { error: "在庫が不足しています" }, status: :unprocessable_entity
         end
 
         coupon = nil
@@ -57,6 +65,7 @@ module Api
               unit_price: variant.price,
               quantity: cart_item.quantity
             )
+            variant.stock.decrement!(:quantity, cart_item.quantity)
           end
 
           if coupon

@@ -11,6 +11,10 @@ Rails.application.routes.draw do
         resources :coupons, only: [ :create, :index, :update, :destroy ]
       end
 
+      resources :product_variants, only: [] do
+        resource :stock, only: [ :update ]
+      end
+
       resource :cart, only: [ :show ] do
         resources :items, only: [ :create, :update, :destroy ], controller: "cart_items"
       end

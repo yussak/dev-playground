@@ -3,9 +3,9 @@ require "rails_helper"
 RSpec.describe "Api::V1::Orders", type: :request do
   let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: user) }
-  let!(:variant) { product.product_variants.create!(price: 1000) }
+  let!(:variant) { product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
   let!(:product2) { Product.create!(name: "商品B", user: user) }
-  let!(:variant2) { product2.product_variants.create!(price: 2000) }
+  let!(:variant2) { product2.product_variants.create!(price: 2000).tap { |v| v.stock.update!(quantity: 100) } }
   let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
 
   def auth_header(u)
@@ -52,6 +52,38 @@ RSpec.describe "Api::V1::Orders", type: :request do
       end
     end
 
+    context "在庫が不足している場合" do
+      before do
+        variant.stock.update!(quantity: 1)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 2)
+      end
+
+      it "422を返し、注文は作成されない" do
+        expect {
+          post "/api/v1/orders", headers: headers, as: :json
+        }.not_to change(Order, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(variant.stock.reload.quantity).to eq(1)
+      end
+    end
+
+    context "注文が成立した場合" do
+      before do
+        variant.stock.update!(quantity: 10)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 3)
+      end
+
+      it "注文した数だけ在庫が減る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        expect(response).to have_http_status(:created)
+        expect(variant.stock.reload.quantity).to eq(7)
+      end
+    end
+
     context "削除済み商品のみの場合" do
       before do
         product.deleted!
@@ -77,7 +109,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "クーポンを適用する場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
-      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
 
       context "固定額クーポン" do
         let!(:coupon) do
@@ -263,7 +295,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "クーポンが適用された注文の場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
-      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
       let!(:coupon) do
         Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end

@@ -11,6 +11,7 @@ type Variant = {
   size: string | null;
   color: string | null;
   price: number;
+  stock: number;
 };
 
 type Product = {
@@ -70,7 +71,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.variants.map((v) => (
             <li key={v.id} style={{ marginBottom: "0.5rem" }}>
               {variantLabel(v)} — {v.price}円
-              <AddToCartButton productVariantId={v.id} />
+              {v.stock <= 0 ? (
+                <span style={{ marginLeft: "0.5rem", color: "#999" }}>在庫切れ</span>
+              ) : (
+                <AddToCartButton productVariantId={v.id} />
+              )}
             </li>
           ))}
         </ul>
@@ -82,6 +87,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
           >
             編集
+          </a>
+          <a
+            href={`/products/${product.id}/stock`}
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            在庫管理
           </a>
           {coupons.length === 0 && (
             <a
