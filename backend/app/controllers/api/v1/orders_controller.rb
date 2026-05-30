@@ -21,17 +21,11 @@ module Api
           return render json: { error: "カートが空です" }, status: :unprocessable_entity
         end
 
-        active_items = cart.cart_items.includes(product_variant: [ :product, :stock ]).select { |item| item.product.active? }
-        if active_items.empty?
-          return render json: { error: "注文可能な商品がありません" }, status: :unprocessable_entity
-        end
+        orderable_items = cart.cart_items.includes(product_variant: [ :product, :stock ])
+                             .select { |item| item.active? && item.product.active? }
 
-        insufficient = active_items.any? do |item|
-          stock = item.product_variant.stock
-          stock.nil? || stock.quantity < item.quantity
-        end
-        if insufficient
-          return render json: { error: "在庫が不足しています" }, status: :unprocessable_entity
+        if orderable_items.empty?
+          return render json: { error: "注文可能な商品がありません" }, status: :unprocessable_entity
         end
 
         coupon = nil
@@ -40,14 +34,30 @@ module Api
           if coupon.nil? || !coupon.valid_for_use_by?(@current_user)
             return render json: { error: "クーポンが無効です" }, status: :unprocessable_entity
           end
-          unless active_items.any? { |item| item.product_id == coupon.product_id }
+          unless orderable_items.any? { |item| item.product_id == coupon.product_id }
             return render json: { error: "対象商品がカートにありません" }, status: :unprocessable_entity
           end
         end
 
         order = nil
+        newly_unavailable = []
+
         ActiveRecord::Base.transaction do
-          discount_amount = coupon ? coupon.discount_amount_for(active_items) : 0
+          purchasable_items, insufficient_items = orderable_items.partition do |item|
+            stock = item.product_variant.stock
+            stock.present? && stock.quantity >= item.quantity
+          end
+
+          insufficient_items.each do |item|
+            item.unavailable!
+            newly_unavailable << item
+          end
+
+          if purchasable_items.empty?
+            raise ActiveRecord::Rollback
+          end
+
+          discount_amount = coupon ? coupon.discount_amount_for(purchasable_items) : 0
 
           order = @current_user.orders.create!(
             order_number: SecureRandom.uuid,
@@ -55,7 +65,7 @@ module Api
             discount_amount: discount_amount
           )
 
-          active_items.each do |cart_item|
+          purchasable_items.each do |cart_item|
             variant = cart_item.product_variant
             order.order_items.create!(
               product_variant: variant,
@@ -72,10 +82,18 @@ module Api
             CouponUse.create!(coupon: coupon, user: @current_user, order: order, status: :used)
           end
 
-          cart.cart_items.destroy_all
+          cart.cart_items.where(id: purchasable_items.map(&:id)).destroy_all
         end
 
-        render json: order_detail_json(order), status: :created
+        if order.nil?
+          return render json: {
+            error: "在庫が不足しているため注文できませんでした",
+            unavailable_items: newly_unavailable.map { |i| { product_name: i.product_variant.product.name, size: i.product_variant.size, color: i.product_variant.color } }
+          }, status: :unprocessable_entity
+        end
+
+        has_unavailable = newly_unavailable.any? || cart.cart_items.reload.any?(&:unavailable?)
+        render json: order_detail_json(order).merge(partially_unavailable: has_unavailable), status: :created
       end
 
       def cancel

@@ -82,6 +82,51 @@ RSpec.describe "Api::V1::Orders", type: :request do
         expect(response).to have_http_status(:created)
         expect(variant.stock.reload.quantity).to eq(7)
       end
+
+      it "partially_unavailable が false になる" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["partially_unavailable"]).to eq(false)
+      end
+    end
+
+    context "一部のアイテムが在庫切れの場合（部分成立）" do
+      before do
+        variant.stock.update!(quantity: 10)
+        variant2.stock.update!(quantity: 0)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 1)
+        cart.cart_items.create!(product_variant: variant2, quantity: 1)
+      end
+
+      it "在庫がある分だけ注文が成立する" do
+        expect {
+          post "/api/v1/orders", headers: headers, as: :json
+        }.to change(Order, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+        body = JSON.parse(response.body)
+        expect(body["items"].length).to eq(1)
+        expect(body["items"].first["product_name"]).to eq("商品A")
+        expect(body["partially_unavailable"]).to eq(true)
+      end
+
+      it "在庫切れのアイテムはカートに unavailable として残る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        remaining = user.cart.cart_items.reload
+        expect(remaining.count).to eq(1)
+        expect(remaining.first.product_variant).to eq(variant2)
+        expect(remaining.first.status).to eq("unavailable")
+      end
+
+      it "在庫がある分の在庫数が減る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        expect(variant.stock.reload.quantity).to eq(9)
+        expect(variant2.stock.reload.quantity).to eq(0)
+      end
     end
 
     context "削除済み商品のみの場合" do
