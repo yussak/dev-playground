@@ -128,3 +128,29 @@ TODO: `docs/inventory-todo.md`
 
 - 「現在購入できません」セクションへの自動移動 → スライス 5
 - 注文確定時の部分成立とモーダル → スライス 6
+
+## スライス 5: カート保持中の在庫切れ対応
+
+### データモデル
+
+- `cart_items` テーブルに `status` カラム（string, null: false, default: "active"）を追加
+- 値は `"active"` / `"unavailable"` の 2 種類
+- `CartItem` モデルに enum を追加
+
+### API: カート取得 (`Api::V1::CartsController#show`)
+
+- レスポンスを返す前に、各 cart_item の在庫を確認する
+- `stock.quantity < 1` の場合、その cart_item を `unavailable` に更新する
+- `stock.quantity >= 1` だった場合、`unavailable` になっていたアイテムを `active` に戻す（在庫が復活したケース）
+- レスポンスに `status` を含める
+
+### フロント: カート画面
+
+- `active` なアイテム → 通常のカートテーブルに表示
+- `unavailable` なアイテム → 「現在購入できません」セクションに分けて表示
+- `unavailable` アイテムは注文対象から除外（「注文を確定する」ボタンの制御はスライス 6）
+
+### スライス 5 で扱わない範囲
+
+- 注文確定時に `unavailable` アイテムを除外して部分成立させる → スライス 6
+- 注文確定後に `unavailable` アイテムをカートに残す → スライス 6

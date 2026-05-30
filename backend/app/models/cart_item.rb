@@ -4,5 +4,7 @@ class CartItem < ApplicationRecord
 
   delegate :product, :product_id, to: :product_variant
 
+  enum :status, { active: "active", unavailable: "unavailable" }
+
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }
 end

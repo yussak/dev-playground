@@ -6,6 +6,7 @@ module Api
       def show
         cart = @current_user.cart
         if cart
+          sync_stock_status(cart)
           render json: cart_json(cart)
         else
           render json: { items: [] }
@@ -13,6 +14,17 @@ module Api
       end
 
       private
+
+      def sync_stock_status(cart)
+        cart.cart_items.includes(product_variant: :stock).each do |item|
+          stock_quantity = item.product_variant.stock&.quantity || 0
+          if stock_quantity < 1
+            item.unavailable! unless item.unavailable?
+          else
+            item.active! if item.unavailable?
+          end
+        end
+      end
 
       def cart_json(cart)
         items = cart.cart_items.includes(product_variant: [ :product, :stock ]).map do |item|
@@ -29,13 +41,14 @@ module Api
             quantity: item.quantity,
             subtotal: variant.price * item.quantity,
             product_deleted: product.deleted?,
-            stock: variant.stock&.quantity || 0
+            stock: variant.stock&.quantity || 0,
+            status: item.status
           }
         end
 
         {
           items: items,
-          total: items.reject { |i| i[:product_deleted] }.sum { |i| i[:subtotal] }
+          total: items.reject { |i| i[:product_deleted] || i[:status] == "unavailable" }.sum { |i| i[:subtotal] }
         }
       end
     end

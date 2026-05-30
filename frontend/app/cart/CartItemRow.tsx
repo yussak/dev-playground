@@ -15,6 +15,7 @@ type CartItem = {
   subtotal: number;
   product_deleted: boolean;
   stock: number;
+  status: "active" | "unavailable";
 };
 
 function variantLabel(item: CartItem): string {

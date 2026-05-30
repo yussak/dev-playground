@@ -103,6 +103,43 @@ RSpec.describe "Api::V1::Cart", type: :request do
         body = JSON.parse(response.body)
         expect(body["items"].first["stock"]).to eq(5)
       end
+
+      it "在庫がある場合 status が active になる" do
+        variant.stock.update!(quantity: 5)
+
+        get "/api/v1/cart", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["items"].first["status"]).to eq("active")
+      end
+
+      it "在庫が 0 になると status が unavailable になる" do
+        variant.stock.update!(quantity: 0)
+
+        get "/api/v1/cart", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["items"].first["status"]).to eq("unavailable")
+      end
+
+      it "unavailable だったアイテムは在庫が戻ると active に戻る" do
+        variant.stock.update!(quantity: 0)
+        get "/api/v1/cart", headers: headers, as: :json
+        expect(JSON.parse(response.body)["items"].first["status"]).to eq("unavailable")
+
+        variant.stock.update!(quantity: 5)
+        get "/api/v1/cart", headers: headers, as: :json
+        expect(JSON.parse(response.body)["items"].first["status"]).to eq("active")
+      end
+
+      it "unavailable なアイテムは合計に含まれない" do
+        variant.stock.update!(quantity: 0)
+
+        get "/api/v1/cart", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["total"]).to eq(0)
+      end
     end
 
     context "カートが空の場合" do
