@@ -290,6 +290,15 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "キャンセルすると注文した数だけ在庫が戻る" do
+        variant.stock.update!(quantity: 5)
+        order.order_items.first.update!(quantity: 3)
+
+        expect {
+          patch "/api/v1/orders/#{order.id}/cancel", headers: headers, as: :json
+        }.to change { variant.stock.reload.quantity }.from(5).to(8)
+      end
     end
 
     context "クーポンが適用された注文の場合" do

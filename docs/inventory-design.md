@@ -115,3 +115,16 @@ TODO: `docs/inventory-todo.md`
 
 - 「現在購入できません」セクションへの自動移動 → スライス 5
 - キャンセル時の在庫加算 → スライス 4
+
+## スライス 4: キャンセル時の戻し
+
+### API: 注文キャンセル (`Api::V1::OrdersController#cancel`)
+
+- 既存のトランザクション内で、キャンセル成立と同時に対応する商品オプションの在庫を加算する
+- 処理: `order.order_items` を辿り、各 `order_item` の `product_variant.stock` に `increment!(:quantity, item.quantity)` を呼ぶ
+- `product_variant` が nil（バリアント削除済み）の場合はスキップする
+
+### スライス 4 で扱わない範囲
+
+- 「現在購入できません」セクションへの自動移動 → スライス 5
+- 注文確定時の部分成立とモーダル → スライス 6

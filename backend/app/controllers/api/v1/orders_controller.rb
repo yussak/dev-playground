@@ -87,6 +87,10 @@ module Api
 
         ActiveRecord::Base.transaction do
           order.coupon_use&.destroy!
+          order.order_items.includes(product_variant: :stock).each do |item|
+            stock = item.product_variant&.stock
+            stock&.increment!(:quantity, item.quantity)
+          end
           order.cancelled!
         end
 
