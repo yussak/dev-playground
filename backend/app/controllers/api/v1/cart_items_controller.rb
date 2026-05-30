@@ -13,7 +13,8 @@ module Api
         cart_item = cart.cart_items.find_by(product_variant: variant)
         current_quantity = cart_item&.quantity || 0
         stock_quantity = variant.stock&.quantity || Stock::DEFAULT_QUANTITY
-        if current_quantity + 1 > stock_quantity
+        quantity_to_add = 1
+        if current_quantity + quantity_to_add > stock_quantity
           return render json: { error: "在庫が不足しています" }, status: :unprocessable_entity
         end
 
