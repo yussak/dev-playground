@@ -14,6 +14,8 @@ type CartItem = {
   quantity: number;
   subtotal: number;
   product_deleted: boolean;
+  stock: number;
+  status: "active" | "unavailable";
 };
 
 function variantLabel(item: CartItem): string {
@@ -60,17 +62,24 @@ export default function CartItemRow({ item }: { item: CartItem }) {
     );
   }
 
+  const outOfStock = item.quantity > item.stock;
+
   return (
-    <tr>
+    <tr style={outOfStock ? { color: "#999" } : undefined}>
       <td style={{ padding: "0.5rem" }}>
         {item.product_name}
         {variantLabel(item) && <span style={{ color: "#666", marginLeft: "0.25rem" }}>{variantLabel(item)}</span>}
+        {outOfStock ? (
+          <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>在庫切れ</span>
+        ) : (item.stock > 0 && item.stock <= 5) ? (
+          <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>残り{item.stock}点</span>
+        ) : null}
       </td>
       <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.unit_price}円</td>
       <td style={{ textAlign: "center", padding: "0.5rem" }}>
         <button onClick={() => handleQuantityChange(-1)} disabled={loading || item.quantity <= 1}>−</button>
         <span style={{ margin: "0 0.5rem" }}>{item.quantity}</span>
-        <button onClick={() => handleQuantityChange(1)} disabled={loading}>＋</button>
+        <button onClick={() => handleQuantityChange(1)} disabled={loading || item.quantity >= item.stock}>＋</button>
       </td>
       <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.subtotal}円</td>
       <td style={{ padding: "0.5rem" }}>

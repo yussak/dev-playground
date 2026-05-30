@@ -10,8 +10,10 @@ export async function placeOrder(couponCode?: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "注文に失敗しました");
-  revalidatePath("/cart");
   revalidatePath("/orders");
+  if (!data.partially_unavailable) {
+    revalidatePath("/cart");
+  }
   return data;
 }
 

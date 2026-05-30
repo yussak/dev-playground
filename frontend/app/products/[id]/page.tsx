@@ -11,6 +11,7 @@ type Variant = {
   size: string | null;
   color: string | null;
   price: number;
+  stock: number;
 };
 
 type Product = {
@@ -70,7 +71,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {product.variants.map((v) => (
             <li key={v.id} style={{ marginBottom: "0.5rem" }}>
               {variantLabel(v)} — {v.price}円
-              <AddToCartButton productVariantId={v.id} />
+              {v.stock <= 0 ? (
+                <span style={{ marginLeft: "0.5rem", color: "#999" }}>在庫切れ</span>
+              ) : (
+                <>
+                  {v.stock <= 5 && (
+                    <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>残り{v.stock}点</span>
+                  )}
+                  <AddToCartButton productVariantId={v.id} />
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -83,6 +93,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           >
             編集
           </a>
+          <a
+            href={`/products/${product.id}/stock`}
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            在庫管理
+          </a>
           {coupons.length === 0 && (
             <a
               href={`/products/${product.id}/coupons/new`}
@@ -92,6 +108,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </a>
           )}
           <DeleteButton productId={product.id} />
+          <a
+            href="/products"
+            style={{ display: "inline-block", padding: "0.5rem 1rem", border: "1px solid #ccc", borderRadius: "4px", textDecoration: "none", color: "inherit" }}
+          >
+            商品一覧に戻る
+          </a>
         </div>
       )}
       {isOwner && coupons.length > 0 && (

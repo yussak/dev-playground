@@ -15,6 +15,8 @@ type CartItem = {
   quantity: number;
   subtotal: number;
   product_deleted: boolean;
+  stock: number;
+  status: "active" | "unavailable";
 };
 
 type CartResponse = {
@@ -33,6 +35,8 @@ export default async function CartPage() {
   if (!session) redirect("/auth/login");
 
   const cart = await fetchCart();
+  const activeItems = cart.items.filter((i) => i.status === "active");
+  const unavailableItems = cart.items.filter((i) => i.status === "unavailable");
 
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
@@ -41,26 +45,54 @@ export default async function CartPage() {
         <p>カートは空です</p>
       ) : (
         <>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>商品名</th>
-                <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>単価</th>
-                <th style={{ textAlign: "center", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>数量</th>
-                <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>小計</th>
-                <th style={{ borderBottom: "1px solid #ccc", padding: "0.5rem" }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.items.map((item) => (
-                <CartItemRow key={item.id} item={item} />
-              ))}
-            </tbody>
-          </table>
-          <p style={{ fontSize: "1.2rem", fontWeight: "bold", marginTop: "1rem" }}>
-            合計: {cart.total}円
-          </p>
-          <PlaceOrderButton />
+          {activeItems.length > 0 && (
+            <>
+              <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>商品名</th>
+                    <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>単価</th>
+                    <th style={{ textAlign: "center", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>数量</th>
+                    <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>小計</th>
+                    <th style={{ borderBottom: "1px solid #ccc", padding: "0.5rem" }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeItems.map((item) => (
+                    <CartItemRow key={item.id} item={item} />
+                  ))}
+                </tbody>
+              </table>
+              <p style={{ fontSize: "1.2rem", fontWeight: "bold", marginTop: "1rem" }}>
+                合計: {cart.total}円
+              </p>
+              <PlaceOrderButton />
+            </>
+          )}
+          {activeItems.length === 0 && unavailableItems.length > 0 && (
+            <p>購入できる商品がありません</p>
+          )}
+          {unavailableItems.length > 0 && (
+            <section style={{ marginTop: "2rem" }}>
+              <h2 style={{ fontSize: "1rem", color: "#999" }}>現在購入できません</h2>
+              <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>商品名</th>
+                    <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>単価</th>
+                    <th style={{ textAlign: "center", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>数量</th>
+                    <th style={{ textAlign: "right", borderBottom: "1px solid #ccc", padding: "0.5rem" }}>小計</th>
+                    <th style={{ borderBottom: "1px solid #ccc", padding: "0.5rem" }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {unavailableItems.map((item) => (
+                    <CartItemRow key={item.id} item={item} />
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
         </>
       )}
     </main>

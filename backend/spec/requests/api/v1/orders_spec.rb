@@ -3,9 +3,9 @@ require "rails_helper"
 RSpec.describe "Api::V1::Orders", type: :request do
   let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: user) }
-  let!(:variant) { product.product_variants.create!(price: 1000) }
+  let!(:variant) { product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
   let!(:product2) { Product.create!(name: "商品B", user: user) }
-  let!(:variant2) { product2.product_variants.create!(price: 2000) }
+  let!(:variant2) { product2.product_variants.create!(price: 2000).tap { |v| v.stock.update!(quantity: 100) } }
   let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
 
   def auth_header(u)
@@ -52,6 +52,83 @@ RSpec.describe "Api::V1::Orders", type: :request do
       end
     end
 
+    context "在庫が不足している場合" do
+      before do
+        variant.stock.update!(quantity: 1)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 2)
+      end
+
+      it "422を返し、注文は作成されない" do
+        expect {
+          post "/api/v1/orders", headers: headers, as: :json
+        }.not_to change(Order, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(variant.stock.reload.quantity).to eq(1)
+      end
+    end
+
+    context "注文が成立した場合" do
+      before do
+        variant.stock.update!(quantity: 10)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 3)
+      end
+
+      it "注文した数だけ在庫が減る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        expect(response).to have_http_status(:created)
+        expect(variant.stock.reload.quantity).to eq(7)
+      end
+
+      it "partially_unavailable が false になる" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        body = JSON.parse(response.body)
+        expect(body["partially_unavailable"]).to eq(false)
+      end
+    end
+
+    context "一部のアイテムが在庫切れの場合（部分成立）" do
+      before do
+        variant.stock.update!(quantity: 10)
+        variant2.stock.update!(quantity: 0)
+        cart = user.create_cart!
+        cart.cart_items.create!(product_variant: variant, quantity: 1)
+        cart.cart_items.create!(product_variant: variant2, quantity: 1)
+      end
+
+      it "在庫がある分だけ注文が成立する" do
+        expect {
+          post "/api/v1/orders", headers: headers, as: :json
+        }.to change(Order, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+        body = JSON.parse(response.body)
+        expect(body["items"].length).to eq(1)
+        expect(body["items"].first["product_name"]).to eq("商品A")
+        expect(body["partially_unavailable"]).to eq(true)
+      end
+
+      it "在庫切れのアイテムはカートに unavailable として残る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        remaining = user.cart.cart_items.reload
+        expect(remaining.count).to eq(1)
+        expect(remaining.first.product_variant).to eq(variant2)
+        expect(remaining.first.status).to eq("unavailable")
+      end
+
+      it "在庫がある分の在庫数が減る" do
+        post "/api/v1/orders", headers: headers, as: :json
+
+        expect(variant.stock.reload.quantity).to eq(9)
+        expect(variant2.stock.reload.quantity).to eq(0)
+      end
+    end
+
     context "削除済み商品のみの場合" do
       before do
         product.deleted!
@@ -77,7 +154,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "クーポンを適用する場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
-      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
 
       context "固定額クーポン" do
         let!(:coupon) do
@@ -258,12 +335,21 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "キャンセルすると注文した数だけ在庫が戻る" do
+        variant.stock.update!(quantity: 5)
+        order.order_items.first.update!(quantity: 3)
+
+        expect {
+          patch "/api/v1/orders/#{order.id}/cancel", headers: headers, as: :json
+        }.to change { variant.stock.reload.quantity }.from(5).to(8)
+      end
     end
 
     context "クーポンが適用された注文の場合" do
       let!(:seller) { User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
-      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000) }
+      let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
       let!(:coupon) do
         Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end

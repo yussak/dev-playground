@@ -4,12 +4,12 @@ module Api
       before_action :authenticate_user!, only: [ :create, :update ]
 
       def index
-        products = Product.includes(:product_variants).all
+        products = Product.includes(product_variants: :stock).all
         render json: products.map { |product| product_summary_json(product) }
       end
 
       def show
-        product = Product.includes(:product_variants).find(params[:id])
+        product = Product.includes(product_variants: :stock).find(params[:id])
         render json: product_detail_json(product)
       rescue ActiveRecord::RecordNotFound
         render json: { error: "商品が見つかりません" }, status: :not_found
@@ -104,7 +104,8 @@ module Api
           description: product.description,
           min_price: prices.min,
           max_price: prices.max,
-          user_id: product.user_id
+          user_id: product.user_id,
+          total_stock: product.total_stock
         }
       end
 
@@ -115,7 +116,7 @@ module Api
           description: product.description,
           user_id: product.user_id,
           variants: product.product_variants.order(:id).map do |v|
-            { id: v.id, size: v.size, color: v.color, price: v.price }
+            { id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock&.quantity || Stock::DEFAULT_QUANTITY }
           end
         }
       end

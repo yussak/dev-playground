@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_22_164000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -28,6 +28,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_164000) do
     t.datetime "created_at", null: false
     t.bigint "product_variant_id", null: false
     t.integer "quantity", default: 1, null: false
+    t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
     t.index ["cart_id", "product_variant_id"], name: "index_cart_items_on_cart_id_and_product_variant_id", unique: true
     t.index ["cart_id"], name: "index_cart_items_on_cart_id"
@@ -124,6 +125,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_164000) do
     t.index ["user_id"], name: "index_products_on_user_id"
   end
 
+  create_table "stocks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_stocks_on_product_variant_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -146,4 +155,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_164000) do
   add_foreign_key "product_images", "products"
   add_foreign_key "product_variants", "products"
   add_foreign_key "products", "users"
+  add_foreign_key "stocks", "product_variants"
 end

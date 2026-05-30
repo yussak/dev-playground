@@ -11,6 +11,10 @@ class Product < ApplicationRecord
   validates :name, presence: true
   validate :variants_pattern_consistency
 
+  def total_stock
+    product_variants.includes(:stock).sum { |v| v.stock&.quantity || Stock::DEFAULT_QUANTITY }
+  end
+
   private
 
   def variants_pattern_consistency
