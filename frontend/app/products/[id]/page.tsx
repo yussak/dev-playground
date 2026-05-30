@@ -74,7 +74,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {v.stock <= 0 ? (
                 <span style={{ marginLeft: "0.5rem", color: "#999" }}>在庫切れ</span>
               ) : (
-                <AddToCartButton productVariantId={v.id} />
+                <>
+                  {v.stock <= 5 && (
+                    <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>残り{v.stock}点</span>
+                  )}
+                  <AddToCartButton productVariantId={v.id} />
+                </>
               )}
             </li>
           ))}

@@ -69,9 +69,11 @@ export default function CartItemRow({ item }: { item: CartItem }) {
       <td style={{ padding: "0.5rem" }}>
         {item.product_name}
         {variantLabel(item) && <span style={{ color: "#666", marginLeft: "0.25rem" }}>{variantLabel(item)}</span>}
-        {outOfStock && (
+        {outOfStock ? (
           <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>在庫切れ</span>
-        )}
+        ) : (item.stock > 0 && item.stock <= 5) ? (
+          <span style={{ marginLeft: "0.5rem", color: "#d97706" }}>残り{item.stock}点</span>
+        ) : null}
       </td>
       <td style={{ textAlign: "right", padding: "0.5rem" }}>{item.unit_price}円</td>
       <td style={{ textAlign: "center", padding: "0.5rem" }}>

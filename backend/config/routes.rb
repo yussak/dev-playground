@@ -12,7 +12,11 @@ Rails.application.routes.draw do
       end
 
       resources :product_variants, only: [] do
-        resource :stock, only: [ :update ]
+        resource :stock, only: [ :update ] do
+          member do
+            patch :adjust
+          end
+        end
       end
 
       resource :cart, only: [ :show ] do

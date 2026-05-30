@@ -65,4 +65,44 @@ RSpec.describe "Api::V1::Stocks", type: :request do
       end
     end
   end
+
+  describe "PATCH /api/v1/product_variants/:product_variant_id/stock/adjust" do
+    context "出品者本人の場合" do
+      it "adjustment が正の値のとき在庫が増える" do
+        variant.stock.update!(quantity: 10)
+        patch "/api/v1/product_variants/#{variant.id}/stock/adjust",
+          params: { adjustment: 5 }, headers: auth_header(owner), as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(variant.stock.reload.quantity).to eq(15)
+      end
+
+      it "adjustment が負の値のとき在庫が減る" do
+        variant.stock.update!(quantity: 10)
+        patch "/api/v1/product_variants/#{variant.id}/stock/adjust",
+          params: { adjustment: -3 }, headers: auth_header(owner), as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(variant.stock.reload.quantity).to eq(7)
+      end
+
+      it "adjustment がマイナスになっても 0 でクランプされる" do
+        variant.stock.update!(quantity: 2)
+        patch "/api/v1/product_variants/#{variant.id}/stock/adjust",
+          params: { adjustment: -10 }, headers: auth_header(owner), as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(variant.stock.reload.quantity).to eq(0)
+      end
+    end
+
+    context "出品者本人でない場合" do
+      it "403を返す" do
+        patch "/api/v1/product_variants/#{variant.id}/stock/adjust",
+          params: { adjustment: 5 }, headers: auth_header(other), as: :json
+
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+  end
 end
