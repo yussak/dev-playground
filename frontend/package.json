@@ -14,8 +14,8 @@
     "jose": "^6.2.3",
     "next": "^16.2.6",
     "next-auth": "^5.0.0-beta.31",
-    "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
