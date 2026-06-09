@@ -16,7 +16,7 @@ issue: [#123](https://github.com/yussak/modular-monolith-practice/issues/123)
 
 判断が必要になった時点で ADR を切る。
 
-- [ ] モジュールの切り方（境界の定義）
+- [ ] モジュールの切り方（境界の定義） → [ADR-007](adr/007-module-boundaries.md)（提案中）
 - [ ] モジュールの実装方式（名前空間 / Packwerk packs / Rails Engine）
 - [ ] Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
 - [ ] モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
