@@ -19,14 +19,19 @@ issue: [#123](https://github.com/yussak/modular-monolith-practice/issues/123)
 このブランチは既存コードを一気に MM に作り変えて試すためのもの。
 Strangler Fig（新機能から段階的に移行）は将来、別途自分で試す予定。
 
+### モジュールの実装方式 → Packwerk packs
+
+`packs/<module>/app/...` にモジュールごとに app を持ち、`bin/packwerk check` で境界違反を静的検査する。
+- 理由: 既に Packwerk 導入済み（`packwerk.yml` / `package.yml`）で追加コストがほぼゼロ。境界違反を検知できるのが MM 学習の肝。
+- 不採用: 名前空間のみ（境界強制なし）、Rails Engine（第一歩には過剰）。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. モジュールの実装方式（名前空間 / Packwerk packs / Rails Engine）
-2. モジュールの切り方（境界の定義）
+1. モジュールの切り方（境界の定義）
 3. ディレクトリレイアウト
 4. 公開インターフェースの置き場・命名規約
 5. ルーティングの分割方式 / コントローラの名前空間ルール
