@@ -82,14 +82,21 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 理由: 「一般的な MM」の通例 = コントローラは pack へ / 公開 URL にモジュール構造を出さない / routes は中央。これに沿う。v1（API バージョニング）は MM とは無関係の別問題で、今回は残す判断。
 - 不採用: URL・定数にモジュール名を出す（公開 API に内部分割を露出させる、フロントも壊れる）。
 
+### 共通コードの置き場 → ベースクラスはルート pack、認証系は identity へ寄せる
+
+- `ApplicationRecord` / `ApplicationController` → ルート pack（`app/` 直下のまま）。framework のベースクラスはどの pack にも属さない土台なので root に残す（packs の通例）。
+- `JwtHelper`（`app/lib/`）→ 認証は identity の関心事。将来 `packs/identity` の public へ寄せる候補。移動の判断は「通信方式」の回で扱う。
+- 理由: 一般的な MM でも framework 基底クラスは root package が標準。ドメイン色のあるものだけドメインへ寄せる。
+- 不採用: 専用 `packs/shared` に全部入れる（基底クラスまで入れると全 pack が依存する太い結節点になり過剰）。
+- メモ: `ApplicationController#authenticate_user!` が `User` / `JwtHelper` を直接参照しており、identity の関心事が共通層に染み出している。通信方式の回で扱う。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. 共通コード（concerns, ApplicationRecord 等）の置き場
-2. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
-3. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
-4. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-5. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
+2. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
+3. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
+4. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
