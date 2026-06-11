@@ -58,16 +58,27 @@ packs/<module>/
 - 理由: 手動 paths 登録が不要になり pack 追加の手数が減る。Packwerk と同じ Shopify 系で事実上の標準。
 - 不採用: `config/application.rb` で手動登録（pack 追加のたびに paths を意識）。
 
+### 公開インターフェースの置き場・命名規約 → `app/public/<module>/` に集約
+
+```
+packs/catalog/app/public/catalog/api.rb       → Catalog::Api（外部公開）
+packs/catalog/app/models/catalog/product.rb   → 非公開（外から触らせない）
+```
+
+- 外部からは公開 API クラス（例 `Catalog::Api.find_product(id)`）経由でのみ呼ぶ。
+- 理由: Packwerk の `enforce_privacy` が `app/public/` をデフォルトの公開境界として認識する。慣習に乗るだけで「public 配下＝外部OK / それ以外＝内部」が自動で効く。
+- 不採用: AR モデルを直接公開（内部実装が漏れる）、名前空間のみで表現（結局 `app/public/` パスに揃える）。
+- 保留: 返り値を AR にするか DTO にするかは「通信方式」の回で決める。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. 公開インターフェースの置き場・命名規約
-2. ルーティングの分割方式 / コントローラの名前空間ルール
-3. 共通コード（concerns, ApplicationRecord 等）の置き場
-4. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
-5. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
-6. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-7. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. ルーティングの分割方式 / コントローラの名前空間ルール
+2. 共通コード（concerns, ApplicationRecord 等）の置き場
+3. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
+4. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
+5. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
+6. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
