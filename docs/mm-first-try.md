@@ -90,13 +90,21 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 不採用: 専用 `packs/shared` に全部入れる（基底クラスまで入れると全 pack が依存する太い結節点になり過剰）。
 - メモ: `ApplicationController#authenticate_user!` が `User` / `JwtHelper` を直接参照しており、identity の関心事が共通層に染み出している。通信方式の回で扱う。
 
+### Packwerk 強制レベル → 移行完了後に両方 true
+
+手順:
+1. pack 構造へコードを全部移す（このフェーズは違反だらけになるが触らない）。
+2. 移し終えてから `enforce_dependencies: true` / `enforce_privacy: true` を入れ、`bin/packwerk check` で出た違反を潰す。
+
+- 理由: 一括移行ブランチなので「全部移す → 強制 ON → 違反潰し」が素直。最終的に両方 true が MM の到達点。
+- 不採用: 最初から true（一括移行では `package_todo.yml` 管理の旨味が薄い）、依存だけ先に true（2段階管理の手間に見合わない）。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
-2. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
-3. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-4. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
+2. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
+3. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
