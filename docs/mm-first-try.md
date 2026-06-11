@@ -108,11 +108,15 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 不採用: AR 関連のまま残す（すぐ動くが境界が緩い）。
 - 保留: 返り値を AR にするか DTO にするかは別途決める。イベント駆動は今回の対象外（非同期要件が無いため）。
 
+### DB 分離方針 → 単一 DB、cross-module の JOIN・外部キーは当面許容
+
+- DB は単一のまま（schema 分離はしない）。
+- cross-module の JOIN・外部キーは当面許容。物理境界ではなく、Packwerk の `enforce_privacy` によるコードレベルの論理境界で守る。
+- 理由: 一括移行＋学習目的では物理分離は過剰。第一歩としては論理境界を Packwerk で固めるだけで十分。
+- 不採用: schema 分離（今は重い）、JOIN/外部キー全面禁止（第一歩には厳しい）。
+
 ---
 
 ## 未決（決める順）
 
-依存の浅いものから1つずつ。
-
-1. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-2. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
