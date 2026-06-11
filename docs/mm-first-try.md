@@ -70,15 +70,26 @@ packs/catalog/app/models/catalog/product.rb   → 非公開（外から触らせ
 - 不採用: AR モデルを直接公開（内部実装が漏れる）、名前空間のみで表現（結局 `app/public/` パスに揃える）。
 - 保留: 返り値を AR にするか DTO にするかは「通信方式」の回で決める。
 
+### ルーティング / コントローラの名前空間 → コントローラは pack へ、URL・名前空間は現状維持
+
+```
+packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::ProductsController（定数・URL 変更なし）
+```
+
+- コントローラのファイルは各 pack に移す（HTTP の入口もそのドメインの持ち物）。
+- `Api::V1::X` 定数も `/api/v1/...` URL も維持（v1 残す）。フロントは壊さない。
+- routes.rb はアプリ本体に集約（中央維持）。pack ごとの `draw` 分割は pack が増えてから検討。
+- 理由: 「一般的な MM」の通例 = コントローラは pack へ / 公開 URL にモジュール構造を出さない / routes は中央。これに沿う。v1（API バージョニング）は MM とは無関係の別問題で、今回は残す判断。
+- 不採用: URL・定数にモジュール名を出す（公開 API に内部分割を露出させる、フロントも壊れる）。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. ルーティングの分割方式 / コントローラの名前空間ルール
-2. 共通コード（concerns, ApplicationRecord 等）の置き場
-3. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
-4. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
-5. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-6. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. 共通コード（concerns, ApplicationRecord 等）の置き場
+2. Packwerk の `enforce_dependencies` / `enforce_privacy` をいつ true にするか
+3. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
+4. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
+5. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
