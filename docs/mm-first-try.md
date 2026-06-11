@@ -99,12 +99,20 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 理由: 一括移行ブランチなので「全部移す → 強制 ON → 違反潰し」が素直。最終的に両方 true が MM の到達点。
 - 不採用: 最初から true（一括移行では `package_todo.yml` 管理の旨味が薄い）、依存だけ先に true（2段階管理の手間に見合わない）。
 
+### モジュール間通信方式 → 公開 API クラス経由（同期メソッド呼び出し）
+
+他モジュールへの直接の AR 関連（`Product belongs_to :user` 等）をやめ、公開 API クラスのメソッド呼び出し（例 `Catalog::Api.find_product_variant(id)`）に置き換える。
+
+- 対象の cross-module 参照: catalog→identity（Product→User）、promotion→catalog（Coupon→Product）、ordering→identity（Cart/Order→User）、ordering→catalog（CartItem/OrderItem→ProductVariant）。
+- 理由: 境界がはっきり立つ。直接 AR 関連だとモジュールが密結合のままで MM の意味が薄れる。
+- 不採用: AR 関連のまま残す（すぐ動くが境界が緩い）。
+- 保留: 返り値を AR にするか DTO にするかは別途決める。イベント駆動は今回の対象外（非同期要件が無いため）。
+
 ---
 
 ## 未決（決める順）
 
 依存の浅いものから1つずつ。
 
-1. モジュール間通信方式（同期メソッド呼び出し / イベント駆動 / 併用）
-2. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
-3. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+1. DB 分離方針（単一 DB / schema 分離 / JOIN 可否 / 外部キー可否）
+2. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
