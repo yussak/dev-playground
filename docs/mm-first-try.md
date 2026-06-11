@@ -108,6 +108,37 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 不採用: AR 関連のまま残す（すぐ動くが境界が緩い）。
 - 保留: 返り値を AR にするか DTO にするかは別途決める。イベント駆動は今回の対象外（非同期要件が無いため）。
 
+### 公開 API の返り値 → DTO（PORO/Struct）
+
+- AR をそのまま返さず、呼び出し側が必要な分だけの最小 DTO を返す。
+- 理由: AR を返すと内部実装が漏れ public の意味が消える。最小 DTO が境界の意味を最も保つ。
+- 不採用: AR をそのまま返す、全フィールドの汎用 DTO。
+
+### モデル名前空間化に伴うテーブル名 → 既存テーブル名を維持
+
+- `Catalog::Product` 等にしても `self.table_name = "products"` で既存テーブル名を維持する。
+- 理由: テーブル改名（`catalog_products` 等）はマイグレーションが必要でリスク・作業量が大きく、MM の本筋と無関係。
+- 不採用: テーブル名も改名。
+
+### cross-module 関連の書き換え方 → 関連を消し id カラムは残す
+
+- `belongs_to :user` 等の他モジュールへの直接関連を消し、`user_id` カラムは残す。
+- `order.user.email` のような chain は `Identity::Api.find_user(order.user_id).email` に置き換える。
+- 理由: 境界が明確になり Packwerk privacy 強制と整合する。
+- 不採用: `belongs_to` を残す（境界が緩い）。
+
+### 公開 API クラスの粒度 → モジュールごとに 1 つの `Xxx::Api`
+
+- `Catalog::Api`, `Identity::Api` のようにモジュールごとに窓口を1つに集約する。
+- 理由: 第一歩は窓口を1つにする方が呼び出し側もシンプル。肥大化したら分割する。
+- 不採用: 用途別クラスに分割（今は過剰）。
+
+### `JwtHelper` / 認証の移設 → identity の public へ
+
+- `JwtHelper` を `packs/identity/app/public/identity/` へ移設し、`ApplicationController` は identity の公開 API を呼ぶだけにする。
+- 理由: 認証は identity の関心事。共通層に残すと「共通層→User 直接参照」が消えない。
+- 不採用: 共通層に残す。
+
 ### DB 分離方針 → 単一 DB、cross-module の JOIN・外部キーは当面許容
 
 - DB は単一のまま（schema 分離はしない）。
@@ -115,8 +146,24 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 理由: 一括移行＋学習目的では物理分離は過剰。第一歩としては論理境界を Packwerk で固めるだけで十分。
 - 不採用: schema 分離（今は重い）、JOIN/外部キー全面禁止（第一歩には厳しい）。
 
+### テスト方針 → 既存 spec を移動に追従、他モジュールの公開 API は実物を使う
+
+- 既存の controller / model spec はそのまま維持し、コード移動に合わせて追従させる。
+- pack 間をまたぐテストでは他モジュールの公開 API は実物を使う（mock しない）。単一 DB で実物が動くため。
+- 理由: 振る舞いを変えない移行なので既存テストが安全網になる。実物で通る方が境界の妥当性を検証できる。
+- 不採用: 他モジュールを常に mock。
+
+### Packwerk 違反の潰し方 → 箇所ごとに公開 API を足して経由させる
+
+- `enforce_dependencies` / `enforce_privacy` を true にした後に出る違反は、箇所ごとに公開 API を足して経由させ依存を消す方向で潰す。
+- 理由: 一括移行ブランチなので `package_todo.yml` に逃がす意味が薄い。違反は正面から潰す。
+- 不採用: `package_todo.yml` に大量に載せて先送り。
+
+### フロントエンドの追従 → なし（URL を変えない）
+
+- URL を変えない方針なのでフロント変更は不要。実装中に routes.rb の URL を変えていないことを確認するだけ。
+- 理由: 案の前提「URL 維持」を実装中に破らないため。
+
 ---
 
-## 未決（決める順）
-
-1. テスト方針（モジュール単体 / 統合の切り分け、mock 方針）
+## すべて決定済み。次は実装（pack 移行）。
