@@ -90,14 +90,15 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - 不採用: 専用 `packs/shared` に全部入れる（基底クラスまで入れると全 pack が依存する太い結節点になり過剰）。
 - メモ: `ApplicationController#authenticate_user!` が `User` / `JwtHelper` を直接参照しており、identity の関心事が共通層に染み出している。通信方式の回で扱う。
 
-### Packwerk 強制レベル → 移行完了後に両方 true
+### Packwerk 強制レベル → 移行完了後に `enforce_dependencies: true` のみ
 
 手順:
 1. pack 構造へコードを全部移す（このフェーズは違反だらけになるが触らない）。
-2. 移し終えてから `enforce_dependencies: true` / `enforce_privacy: true` を入れ、`bin/packwerk check` で出た違反を潰す。
+2. 移し終えてから `enforce_dependencies: true` を入れ、`bin/packwerk check` で出た違反を潰す。
 
-- 理由: 一括移行ブランチなので「全部移す → 強制 ON → 違反潰し」が素直。最終的に両方 true が MM の到達点。
+- 理由: 一括移行ブランチなので「全部移す → 強制 ON → 違反潰し」が素直。
 - 不採用: 最初から true（一括移行では `package_todo.yml` 管理の旨味が薄い）、依存だけ先に true（2段階管理の手間に見合わない）。
+- `enforce_privacy` はなし。Packwerk 3.x で core から削除され `packwerk-extensions` への分離となったため。詳細は [ADR-009](adr/009-packwerk-privacy-enforcement.md)。公開境界の慣習（`app/public/<module>/`）は引き続き維持し、将来 extension 導入の余地を残す。
 
 ### モジュール間通信方式 → 公開 API クラス経由（同期メソッド呼び出し）
 

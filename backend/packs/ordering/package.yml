@@ -1,4 +1,7 @@
 # Pack for the Ordering module (carts, cart items, orders, order items)
-# enforce_dependencies / enforce_privacy は移行完了後に true にする（mm-first-try.md ステップ5）
-enforce_dependencies: false
-enforce_privacy: false
+enforce_dependencies: true
+dependencies:
+  - "."
+  - packs/identity
+  - packs/catalog
+  - packs/promotion
