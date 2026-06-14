@@ -30,7 +30,7 @@ module Api
 
         coupon = nil
         if params[:coupon_code].present?
-          coupon = Coupon.find_by(code: params[:coupon_code])
+          coupon = Promotion::Coupon.find_by(code: params[:coupon_code])
           if coupon.nil? || !coupon.valid_for_use_by?(@current_user)
             return render json: { error: "クーポンが無効です" }, status: :unprocessable_entity
           end
@@ -79,7 +79,7 @@ module Api
           end
 
           if coupon
-            CouponUse.create!(coupon: coupon, user: @current_user, order: order, status: :used)
+            Promotion::CouponUse.create!(coupon: coupon, user: @current_user, order: order, status: :used)
           end
 
           cart.cart_items.where(id: purchasable_items.map(&:id)).destroy_all

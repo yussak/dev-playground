@@ -158,7 +158,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
       context "固定額クーポン" do
         let!(:coupon) do
-          Coupon.create!(product: coupon_product, code: "FIXED300", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
+          Promotion::Coupon.create!(product: coupon_product, code: "FIXED300", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
         end
 
         before do
@@ -169,14 +169,14 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "割引額が適用され coupon_use が記録される" do
           expect {
             post "/api/v1/orders", params: { coupon_code: "FIXED300" }, headers: headers, as: :json
-          }.to change(CouponUse, :count).by(1)
+          }.to change(Promotion::CouponUse, :count).by(1)
 
           expect(response).to have_http_status(:created)
 
           order = Order.last
           expect(order.discount_amount).to eq(300)
 
-          coupon_use = CouponUse.last
+          coupon_use = Promotion::CouponUse.last
           expect(coupon_use.user_id).to eq(user.id)
           expect(coupon_use.coupon_id).to eq(coupon.id)
           expect(coupon_use.order_id).to eq(order.id)
@@ -211,7 +211,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
       context "割合クーポン" do
         let!(:coupon) do
-          Coupon.create!(product: coupon_product, code: "PERCENT10", discount_type: "percentage", discount_value: 10, expires_at: 1.month.from_now)
+          Promotion::Coupon.create!(product: coupon_product, code: "PERCENT10", discount_type: "percentage", discount_value: 10, expires_at: 1.month.from_now)
         end
 
         before do
@@ -249,7 +249,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         it "期限切れクーポンならエラー" do
-          Coupon.create!(product: coupon_product, code: "EXPIRED01", discount_type: "fixed", discount_value: 300, expires_at: 1.day.ago)
+          Promotion::Coupon.create!(product: coupon_product, code: "EXPIRED01", discount_type: "fixed", discount_value: 300, expires_at: 1.day.ago)
 
           expect {
             post "/api/v1/orders", params: { coupon_code: "EXPIRED01" }, headers: headers, as: :json
@@ -259,9 +259,9 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         it "同ユーザーが2回目使うとエラー" do
-          coupon = Coupon.create!(product: coupon_product, code: "ONCE12345", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
+          coupon = Promotion::Coupon.create!(product: coupon_product, code: "ONCE12345", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
           first_order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
-          CouponUse.create!(coupon: coupon, user: user, order: first_order, status: :used)
+          Promotion::CouponUse.create!(coupon: coupon, user: user, order: first_order, status: :used)
 
           expect {
             post "/api/v1/orders", params: { coupon_code: "ONCE12345" }, headers: headers, as: :json
@@ -273,7 +273,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
       context "対象商品がカートにない場合" do
         let!(:coupon) do
-          Coupon.create!(product: coupon_product, code: "NOTARGET1", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
+          Promotion::Coupon.create!(product: coupon_product, code: "NOTARGET1", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
         end
 
         before do
@@ -301,7 +301,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           expect(response).to have_http_status(:created)
           expect(Order.last.discount_amount).to eq(0)
-          expect(CouponUse.count).to eq(0)
+          expect(Promotion::CouponUse.count).to eq(0)
         end
       end
     end
@@ -351,19 +351,19 @@ RSpec.describe "Api::V1::Orders", type: :request do
       let!(:coupon_product) { Catalog::Product.create!(name: "対象商品", user: seller) }
       let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
       let!(:coupon) do
-        Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
+        Promotion::Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end
       let!(:coupon_order) do
         o = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
         o.order_items.create!(product_variant: coupon_variant, product_name: "対象商品", unit_price: 1000, quantity: 1)
-        CouponUse.create!(coupon: coupon, user: user, order: o, status: :used)
+        Promotion::CouponUse.create!(coupon: coupon, user: user, order: o, status: :used)
         o
       end
 
       it "キャンセル時に coupon_use が削除される" do
         expect {
           patch "/api/v1/orders/#{coupon_order.id}/cancel", headers: headers, as: :json
-        }.to change(CouponUse, :count).by(-1)
+        }.to change(Promotion::CouponUse, :count).by(-1)
       end
 
       it "キャンセル後、同じユーザーが同じクーポンを再度使える" do

@@ -18,7 +18,7 @@ RSpec.describe "Api::V1::Coupons", type: :request do
       it "クーポンが作成される" do
         expect {
           post "/api/v1/products/#{product.id}/coupons", params: valid_params, headers: auth_header(seller), as: :json
-        }.to change(Coupon, :count).by(1)
+        }.to change(Promotion::Coupon, :count).by(1)
 
         expect(response).to have_http_status(:created)
 
@@ -62,13 +62,13 @@ RSpec.describe "Api::V1::Coupons", type: :request do
 
     context "既にクーポンが存在する商品の場合" do
       before do
-        Coupon.create!(product: product, code: "EXISTING1", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
+        Promotion::Coupon.create!(product: product, code: "EXISTING1", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end
 
       it "クーポンを作成できない" do
         expect {
           post "/api/v1/products/#{product.id}/coupons", params: valid_params, headers: auth_header(seller), as: :json
-        }.not_to change(Coupon, :count)
+        }.not_to change(Promotion::Coupon, :count)
 
         expect(response).to have_http_status(:unprocessable_entity)
       end
@@ -113,7 +113,7 @@ RSpec.describe "Api::V1::Coupons", type: :request do
     context "出品者本人の場合" do
       context "クーポンが存在する場合" do
         let!(:coupon) do
-          Coupon.create!(product: product, code: "SUMMER2026", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
+          Promotion::Coupon.create!(product: product, code: "SUMMER2026", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
         end
 
         it "クーポン情報が取得できる" do
@@ -170,7 +170,7 @@ RSpec.describe "Api::V1::Coupons", type: :request do
 
   describe "PATCH /api/v1/products/:product_id/coupons/:id" do
     let!(:coupon) do
-      Coupon.create!(product: product, code: "ORIGINAL1", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
+      Promotion::Coupon.create!(product: product, code: "ORIGINAL1", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
     end
 
     context "出品者本人の場合" do
@@ -246,14 +246,14 @@ RSpec.describe "Api::V1::Coupons", type: :request do
 
   describe "DELETE /api/v1/products/:product_id/coupons/:id" do
     let!(:coupon) do
-      Coupon.create!(product: product, code: "TODELETE1", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
+      Promotion::Coupon.create!(product: product, code: "TODELETE1", discount_type: "fixed", discount_value: 500, expires_at: 1.month.from_now)
     end
 
     context "出品者本人の場合" do
       it "クーポンが削除される" do
         expect {
           delete "/api/v1/products/#{product.id}/coupons/#{coupon.id}", headers: auth_header(seller), as: :json
-        }.to change(Coupon, :count).by(-1)
+        }.to change(Promotion::Coupon, :count).by(-1)
 
         expect(response).to have_http_status(:ok)
       end
@@ -271,7 +271,7 @@ RSpec.describe "Api::V1::Coupons", type: :request do
       it "権限エラーになる" do
         expect {
           delete "/api/v1/products/#{product.id}/coupons/#{coupon.id}", headers: auth_header(other_user), as: :json
-        }.not_to change(Coupon, :count)
+        }.not_to change(Promotion::Coupon, :count)
 
         expect(response).to have_http_status(:forbidden)
       end

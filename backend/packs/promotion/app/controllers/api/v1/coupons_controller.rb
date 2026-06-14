@@ -37,7 +37,7 @@ module Api
       end
 
       def update
-        coupon = Coupon.find(params[:id])
+        coupon = Promotion::Coupon.find(params[:id])
         if coupon.product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end
@@ -52,7 +52,7 @@ module Api
       end
 
       def destroy
-        coupon = Coupon.find(params[:id])
+        coupon = Promotion::Coupon.find(params[:id])
         if coupon.product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end
