@@ -28,15 +28,14 @@ module Api
           return render json: { error: "注文可能な商品がありません" }, status: :unprocessable_entity
         end
 
-        coupon = nil
+        coupon_id = nil
         if params[:coupon_code].present?
-          coupon = Promotion::Coupon.find_by(code: params[:coupon_code])
-          if coupon.nil? || !coupon.valid_for_use_by?(@current_user)
-            return render json: { error: "クーポンが無効です" }, status: :unprocessable_entity
+          validation = Promotion::Api.validate_coupon(code: params[:coupon_code], user: @current_user, items: orderable_items)
+          unless validation[:valid]
+            error_message = validation[:error] == :no_target_in_cart ? "対象商品がカートにありません" : "クーポンが無効です"
+            return render json: { error: error_message }, status: :unprocessable_entity
           end
-          unless orderable_items.any? { |item| item.product_id == coupon.product_id }
-            return render json: { error: "対象商品がカートにありません" }, status: :unprocessable_entity
-          end
+          coupon_id = validation[:coupon_id]
         end
 
         order = nil
@@ -57,7 +56,7 @@ module Api
             raise ActiveRecord::Rollback
           end
 
-          discount_amount = coupon ? coupon.discount_amount_for(purchasable_items) : 0
+          discount_amount = coupon_id ? Promotion::Api.calculate_discount(coupon_id: coupon_id, items: purchasable_items) : 0
 
           order = @current_user.orders.create!(
             order_number: SecureRandom.uuid,
@@ -78,8 +77,8 @@ module Api
             variant.stock.decrement!(:quantity, cart_item.quantity)
           end
 
-          if coupon
-            Promotion::CouponUse.create!(coupon: coupon, user: @current_user, order: order, status: :used)
+          if coupon_id
+            Promotion::Api.record_usage(coupon_id: coupon_id, user: @current_user, order: order)
           end
 
           cart.cart_items.where(id: purchasable_items.map(&:id)).destroy_all
@@ -104,7 +103,7 @@ module Api
         end
 
         ActiveRecord::Base.transaction do
-          order.coupon_use&.destroy!
+          Promotion::Api.cancel_usage(order.id)
           order.order_items.includes(product_variant: :stock).each do |item|
             stock = item.product_variant&.stock
             stock&.increment!(:quantity, item.quantity)
