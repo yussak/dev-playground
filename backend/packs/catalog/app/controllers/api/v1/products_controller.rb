@@ -4,12 +4,12 @@ module Api
       before_action :authenticate_user!, only: [ :create, :update ]
 
       def index
-        products = Product.includes(product_variants: :stock).all
+        products = Catalog::Product.includes(product_variants: :stock).all
         render json: products.map { |product| product_summary_json(product) }
       end
 
       def show
-        product = Product.includes(product_variants: :stock).find(params[:id])
+        product = Catalog::Product.includes(product_variants: :stock).find(params[:id])
         render json: product_detail_json(product)
       rescue ActiveRecord::RecordNotFound
         render json: { error: "商品が見つかりません" }, status: :not_found
@@ -19,7 +19,7 @@ module Api
         authenticate_user!
         return if performed?
 
-        product = Product.find(params[:id])
+        product = Catalog::Product.find(params[:id])
         if product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end
@@ -31,7 +31,7 @@ module Api
       end
 
       def update
-        product = Product.find(params[:id])
+        product = Catalog::Product.find(params[:id])
         if product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end
@@ -116,7 +116,7 @@ module Api
           description: product.description,
           user_id: product.user_id,
           variants: product.product_variants.order(:id).map do |v|
-            { id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock&.quantity || Stock::DEFAULT_QUANTITY }
+            { id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock&.quantity || Catalog::Stock::DEFAULT_QUANTITY }
           end
         }
       end

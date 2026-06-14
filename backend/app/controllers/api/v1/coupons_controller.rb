@@ -4,7 +4,7 @@ module Api
       before_action :authenticate_user!
 
       def index
-        product = Product.find(params[:product_id])
+        product = Catalog::Product.find(params[:product_id])
         if product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end
@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        product = Product.find(params[:product_id])
+        product = Catalog::Product.find(params[:product_id])
         if product.user_id != @current_user.id
           return render json: { error: "権限がありません" }, status: :forbidden
         end

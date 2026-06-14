@@ -41,7 +41,7 @@ module Api
             quantity: item.quantity,
             subtotal: variant.price * item.quantity,
             product_deleted: product.deleted?,
-            stock: variant.stock&.quantity || Stock::DEFAULT_QUANTITY,
+            stock: variant.stock&.quantity || Catalog::Stock::DEFAULT_QUANTITY,
             status: item.status
           }
         end

@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Coupons", type: :request do
   let!(:seller) { Identity::User.create!(name: "出品者", email: "seller@example.com", password: "password123") }
   let!(:other_user) { Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123") }
-  let!(:product) { Product.create!(name: "商品A", user: seller) }
+  let!(:product) { Catalog::Product.create!(name: "商品A", user: seller) }
 
   def auth_header(user)
     { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: user.id)}" }

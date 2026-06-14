@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Stocks", type: :request do
   let!(:owner) { Identity::User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
   let!(:other) { Identity::User.create!(name: "他人", email: "other@example.com", password: "password123") }
-  let!(:product) { Product.create!(name: "商品A", user: owner) }
+  let!(:product) { Catalog::Product.create!(name: "商品A", user: owner) }
   let!(:variant) { product.product_variants.create!(price: 1000) }
 
   def auth_header(u)

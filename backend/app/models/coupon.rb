@@ -1,5 +1,6 @@
 class Coupon < ApplicationRecord
-  belongs_to :product
+  # product は catalog の所有。規約推論だと存在しない top-level Product を探すため明示
+  belongs_to :product, class_name: "Catalog::Product"
   has_many :coupon_uses, dependent: :destroy
 
   enum :discount_type, { fixed: "fixed", percentage: "percentage" }

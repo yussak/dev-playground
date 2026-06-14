@@ -1,6 +1,7 @@
 class CartItem < ApplicationRecord
   belongs_to :cart
-  belongs_to :product_variant
+  # product_variant は catalog の所有。規約推論だと存在しない top-level ProductVariant を探すため明示
+  belongs_to :product_variant, class_name: "Catalog::ProductVariant"
 
   delegate :product, :product_id, to: :product_variant
 

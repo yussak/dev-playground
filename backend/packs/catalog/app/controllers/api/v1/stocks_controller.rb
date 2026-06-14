@@ -33,7 +33,7 @@ module Api
       private
 
       def find_authorized_variant
-        variant = ProductVariant.includes(:product, :stock).find(params[:product_variant_id])
+        variant = Catalog::ProductVariant.includes(:product, :stock).find(params[:product_variant_id])
         if variant.product.user_id != @current_user.id
           render json: { error: "権限がありません" }, status: :forbidden
           return nil

@@ -10,7 +10,7 @@ RSpec.describe "Api::V1::Products", type: :request do
 
   describe "GET /api/v1/products" do
     it "各商品に total_stock が含まれる" do
-      product = Product.create!(name: "商品A", user: user)
+      product = Catalog::Product.create!(name: "商品A", user: user)
       v1 = product.product_variants.create!(price: 1000)
       v2 = product.product_variants.create!(size: "L", color: "red", price: 1500)
       v1.stock.update!(quantity: 3)
@@ -27,7 +27,7 @@ RSpec.describe "Api::V1::Products", type: :request do
 
   describe "GET /api/v1/products/:id" do
     let!(:product) do
-      product = Product.create!(name: "商品A", description: "説明A", user: user)
+      product = Catalog::Product.create!(name: "商品A", description: "説明A", user: user)
       product.product_variants.create!(size: "M", color: "red", price: 1000)
       product.product_variants.create!(size: "L", color: "red", price: 1500)
       product
@@ -58,14 +58,14 @@ RSpec.describe "Api::V1::Products", type: :request do
   describe "DELETE /api/v1/products/:id" do
     let!(:owner) { Identity::User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
     let!(:other) { Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123") }
-    let!(:product) { Product.create!(name: "削除対象商品", description: "説明", user: owner) }
+    let!(:product) { Catalog::Product.create!(name: "削除対象商品", description: "説明", user: owner) }
 
     context "出品者本人の場合" do
       it "200 を返し商品が削除される" do
         delete "/api/v1/products/#{product.id}", headers: auth_header(owner), as: :json
 
         expect(response).to have_http_status(:ok)
-        expect(Product.find_by(id: product.id)).to be_nil
+        expect(Catalog::Product.find_by(id: product.id)).to be_nil
       end
     end
 
@@ -74,7 +74,7 @@ RSpec.describe "Api::V1::Products", type: :request do
         delete "/api/v1/products/#{product.id}", headers: auth_header(other), as: :json
 
         expect(response).to have_http_status(:forbidden)
-        expect(Product.find_by(id: product.id)).not_to be_nil
+        expect(Catalog::Product.find_by(id: product.id)).not_to be_nil
       end
     end
 
@@ -222,7 +222,7 @@ RSpec.describe "Api::V1::Products", type: :request do
 
   describe "PATCH /api/v1/products/:id" do
     let!(:product) do
-      p = Product.create!(name: "商品A", description: "説明A", user: user)
+      p = Catalog::Product.create!(name: "商品A", description: "説明A", user: user)
       p.product_variants.create!(size: "M", color: "red", price: 1000)
       p.product_variants.create!(size: "L", color: "red", price: 1500)
       p
@@ -264,11 +264,11 @@ RSpec.describe "Api::V1::Products", type: :request do
   describe "GET /api/v1/products" do
     context "商品が存在する場合" do
       before do
-        a = Product.create!(name: "商品A", description: "説明A", user: user)
+        a = Catalog::Product.create!(name: "商品A", description: "説明A", user: user)
         a.product_variants.create!(size: "M", price: 1000)
         a.product_variants.create!(size: "L", price: 1500)
 
-        b = Product.create!(name: "商品B", description: nil, user: user)
+        b = Catalog::Product.create!(name: "商品B", description: nil, user: user)
         b.product_variants.create!(price: 2000)
       end
 

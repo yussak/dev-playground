@@ -2,9 +2,9 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Orders", type: :request do
   let!(:user) { Identity::User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
-  let!(:product) { Product.create!(name: "商品A", user: user) }
+  let!(:product) { Catalog::Product.create!(name: "商品A", user: user) }
   let!(:variant) { product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
-  let!(:product2) { Product.create!(name: "商品B", user: user) }
+  let!(:product2) { Catalog::Product.create!(name: "商品B", user: user) }
   let!(:variant2) { product2.product_variants.create!(price: 2000).tap { |v| v.stock.update!(quantity: 100) } }
   let(:headers) { { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: user.id)}" } }
 
@@ -153,7 +153,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
     context "クーポンを適用する場合" do
       let!(:seller) { Identity::User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
-      let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
+      let!(:coupon_product) { Catalog::Product.create!(name: "対象商品", user: seller) }
       let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
 
       context "固定額クーポン" do
@@ -348,7 +348,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
     context "クーポンが適用された注文の場合" do
       let!(:seller) { Identity::User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
-      let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
+      let!(:coupon_product) { Catalog::Product.create!(name: "対象商品", user: seller) }
       let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
       let!(:coupon) do
         Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)

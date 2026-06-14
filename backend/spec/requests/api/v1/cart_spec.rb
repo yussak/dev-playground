@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Cart", type: :request do
   let!(:user) { Identity::User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
-  let!(:product) { Product.create!(name: "商品A", user: user) }
+  let!(:product) { Catalog::Product.create!(name: "商品A", user: user) }
   let!(:variant) { product.product_variants.create!(size: "M", color: "red", price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
   let(:headers) { { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: user.id)}" } }
 
