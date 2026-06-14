@@ -172,7 +172,10 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 必ず1ステップずつ進める（明示の指示がある場合を除く）。
 
 - [ ] **ステップ0: pack の枠だけ作る** — `packs/{identity,catalog,ordering,promotion}/package.yml` を作成（`enforce_dependencies: false`）。アプリ起動とテスト緑を確認。
-- [ ] **ステップ1: identity 移行** — `User`/`Admin` 移動・名前空間化、`JwtHelper` を identity の public へ、`Identity::Api` + DTO 作成、auth_controller 移動、他からの `User` 参照を置換。
+- [x] **ステップ1: identity 移行** — `User`/`Admin` を `Identity::User`/`Identity::Admin` へ移動（`self.table_name` で既存テーブル名維持）、`JwtHelper` を `Identity::JwtHelper`（identity の public）へ、`Identity::Api`（`encode_token`/`authenticate`）新設、auth_controller を identity pack へ移動。
+  - 振る舞いを変えない最小移設に留めた。他モデルの `belongs_to :user` は撤去せず `class_name: "Identity::User"` を付けて残す。`@current_user` の DTO 化 / `User.has_many` 撤去 / `belongs_to` の完全撤去はステップ5（境界締め）に回す。
+  - 公開 API の返り値 DTO 化も同じくステップ5。`Identity::Api.authenticate` は当面 AR（`Identity::User`）を返す。
+  - pack の spec は `packs/<module>/spec/` に置く。`.rspec` に `--pattern` を足すと個別ファイル指定が壊れる既知挙動（rspec-core #2897）のため設定はせず、フルスイートは `bundle exec rspec spec packs` で回す。
 - [ ] **ステップ2: catalog 移行** — `Product`/`ProductImage`/`ProductVariant`/`Stock` 移動・名前空間化、`Catalog::Api` + DTO、products/stocks コントローラ移動、ordering/promotion からの参照を API 経由に。
 - [ ] **ステップ3: promotion 移行** — `Coupon`/`CouponUse` 移動・名前空間化、`Promotion::Api`、coupons コントローラ移動、`Coupon belongs_to :product` を外し `Catalog::Api` 経由に。
 - [ ] **ステップ4: ordering 移行** — `Cart`/`CartItem`/`Order`/`OrderItem` 移動・名前空間化、`Ordering::Api`、carts/cart_items/orders コントローラ移動、`Cart/Order belongs_to :user` と `*Item → ProductVariant` を外して API 経由に。
