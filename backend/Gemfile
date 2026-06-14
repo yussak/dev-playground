@@ -30,8 +30,6 @@ gem "kamal", require: false
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
 
-# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 2.0"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
@@ -52,4 +50,11 @@ group :development, :test do
 
   # Modular monolith boundary enforcement [https://github.com/Shopify/packwerk]
   gem "packwerk", "3.3.0"
+
+  # Type checking [https://sorbet.org/]
+  gem "sorbet", "0.6.13297"
+  gem "tapioca", "0.19.1", require: false
 end
+
+# sorbet-runtime is loaded in all environments so sig runs in production too
+gem "sorbet-runtime", "0.6.13297"
