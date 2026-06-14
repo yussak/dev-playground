@@ -62,7 +62,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       it "422を返し、注文は作成されない" do
         expect {
           post "/api/v1/orders", headers: headers, as: :json
-        }.not_to change(Order, :count)
+        }.not_to change(Ordering::Order, :count)
 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(variant.stock.reload.quantity).to eq(1)
@@ -103,7 +103,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       it "在庫がある分だけ注文が成立する" do
         expect {
           post "/api/v1/orders", headers: headers, as: :json
-        }.to change(Order, :count).by(1)
+        }.to change(Ordering::Order, :count).by(1)
 
         expect(response).to have_http_status(:created)
         body = JSON.parse(response.body)
@@ -173,7 +173,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           expect(response).to have_http_status(:created)
 
-          order = Order.last
+          order = Ordering::Order.last
           expect(order.discount_amount).to eq(300)
 
           coupon_use = Promotion::CouponUse.last
@@ -197,7 +197,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           post "/api/v1/orders", params: { coupon_code: "FIXED300" }, headers: headers, as: :json
 
-          expect(Order.last.discount_amount).to eq(300)
+          expect(Ordering::Order.last.discount_amount).to eq(300)
         end
 
         it "割引額が商品価格を超える場合は商品価格までに制限される" do
@@ -205,7 +205,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           post "/api/v1/orders", params: { coupon_code: "FIXED300" }, headers: headers, as: :json
 
-          expect(Order.last.discount_amount).to eq(1000)
+          expect(Ordering::Order.last.discount_amount).to eq(1000)
         end
       end
 
@@ -222,7 +222,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "商品金額に対して割引率が適用される" do
           post "/api/v1/orders", params: { coupon_code: "PERCENT10" }, headers: headers, as: :json
 
-          expect(Order.last.discount_amount).to eq(100)
+          expect(Ordering::Order.last.discount_amount).to eq(100)
         end
 
         it "割引率 100% なら商品価格と同じ割引額" do
@@ -230,7 +230,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           post "/api/v1/orders", params: { coupon_code: "PERCENT10" }, headers: headers, as: :json
 
-          expect(Order.last.discount_amount).to eq(1000)
+          expect(Ordering::Order.last.discount_amount).to eq(1000)
         end
       end
 
@@ -243,7 +243,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "存在しないコードならエラー" do
           expect {
             post "/api/v1/orders", params: { coupon_code: "NOTEXIST" }, headers: headers, as: :json
-          }.not_to change(Order, :count)
+          }.not_to change(Ordering::Order, :count)
 
           expect(response).to have_http_status(:unprocessable_entity)
         end
@@ -253,7 +253,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           expect {
             post "/api/v1/orders", params: { coupon_code: "EXPIRED01" }, headers: headers, as: :json
-          }.not_to change(Order, :count)
+          }.not_to change(Ordering::Order, :count)
 
           expect(response).to have_http_status(:unprocessable_entity)
         end
@@ -265,7 +265,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           expect {
             post "/api/v1/orders", params: { coupon_code: "ONCE12345" }, headers: headers, as: :json
-          }.not_to change(Order, :count)
+          }.not_to change(Ordering::Order, :count)
 
           expect(response).to have_http_status(:unprocessable_entity)
         end
@@ -284,7 +284,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "エラーになる" do
           expect {
             post "/api/v1/orders", params: { coupon_code: "NOTARGET1" }, headers: headers, as: :json
-          }.not_to change(Order, :count)
+          }.not_to change(Ordering::Order, :count)
 
           expect(response).to have_http_status(:unprocessable_entity)
         end
@@ -300,7 +300,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
           post "/api/v1/orders", headers: headers, as: :json
 
           expect(response).to have_http_status(:created)
-          expect(Order.last.discount_amount).to eq(0)
+          expect(Ordering::Order.last.discount_amount).to eq(0)
           expect(Promotion::CouponUse.count).to eq(0)
         end
       end

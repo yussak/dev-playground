@@ -182,7 +182,9 @@ packs/catalog/app/controllers/api/v1/products_controller.rb  → Api::V1::Produc
 - [x] **ステップ3: promotion 移行** — `Coupon`/`CouponUse` を `Promotion::` へ移動（`self.table_name` で既存テーブル名維持）、`Promotion::Api`（`find_coupon_by_code`）新設、coupons コントローラを promotion pack へ移動。
   - ステップ1/2と同様、振る舞いを変えない最小移設。`Coupon belongs_to :product` は撤去せず `class_name: "Catalog::Product"` のまま残す（API 経由化はステップ5）。`Catalog::Product has_one :coupon` / `Order has_one :coupon_use` も `class_name` 付きで残す。
   - orders_controller の `Coupon`/`CouponUse` 直接参照は `Promotion::` への置換に留め、API 経由化はステップ5。
-- [ ] **ステップ4: ordering 移行** — `Cart`/`CartItem`/`Order`/`OrderItem` 移動・名前空間化、`Ordering::Api`、carts/cart_items/orders コントローラ移動、`Cart/Order belongs_to :user` と `*Item → ProductVariant` を外して API 経由に。
+- [x] **ステップ4: ordering 移行** — `Cart`/`CartItem`/`Order`/`OrderItem` を `Ordering::` へ移動（`self.table_name` で既存テーブル名維持）、`Ordering::Api`（`find_cart_for`）新設、carts/cart_items/orders コントローラを ordering pack へ移動。
+  - ステップ1〜3と同様、振る舞いを変えない最小移設。`Cart/Order belongs_to :user` / `*Item belongs_to :product_variant` は撤去せず `class_name` を付けて残す（撤去・API 経由化はステップ5）。`Identity::User has_one :cart` / `has_many :orders`、`Catalog::ProductVariant has_many :cart_items` / `:order_items`、`Promotion::CouponUse belongs_to :order` も `class_name` 付きで残す。
+  - 副作用修正: `carts_controller#sync_stock_status` に残っていた `Stock::DEFAULT_QUANTITY`（旧 top-level）を `Catalog::Stock::DEFAULT_QUANTITY` へ修正（ステップ2の漏れ）。
 - [ ] **ステップ5: 境界を締める** — 各 `package.yml` に `dependencies` を書き `enforce_dependencies: true` / `enforce_privacy: true`、`bin/packwerk check` で出た違反を公開 API を足して潰す。
 - [ ] **ステップ6: 仕上げ** — 全 rspec + rubocop + packwerk を通す、routes の URL が変わっていない（フロント無影響）ことを確認。
 
