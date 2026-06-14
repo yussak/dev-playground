@@ -1,13 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Cart", type: :request do
-  let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
+  let!(:user) { Identity::User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: user) }
   let!(:variant) { product.product_variants.create!(size: "M", color: "red", price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
-  let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
+  let(:headers) { { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: user.id)}" } }
 
   def auth_header(u)
-    { "Authorization" => "Bearer #{JwtHelper.encode(user_id: u.id)}" }
+    { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: u.id)}" }
   end
 
   describe "POST /api/v1/cart/items" do
@@ -189,7 +189,7 @@ RSpec.describe "Api::V1::Cart", type: :request do
       end
 
       it "他ユーザーのカートアイテムは変更できない" do
-        other = User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
+        other = Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
         patch "/api/v1/cart/items/#{cart_item.id}", headers: auth_header(other), params: { quantity: 5 }, as: :json
 
         expect(response).to have_http_status(:not_found)
@@ -210,7 +210,7 @@ RSpec.describe "Api::V1::Cart", type: :request do
       end
 
       it "他ユーザーのカートアイテムは削除できない" do
-        other = User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
+        other = Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
         delete "/api/v1/cart/items/#{cart_item.id}", headers: auth_header(other), as: :json
 
         expect(response).to have_http_status(:not_found)

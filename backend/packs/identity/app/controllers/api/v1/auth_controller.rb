@@ -2,9 +2,9 @@ module Api
   module V1
     class AuthController < ApplicationController
       def register
-        user = User.new(name: params[:name], email: params[:email], password: params[:password])
+        user = Identity::User.new(name: params[:name], email: params[:email], password: params[:password])
         if user.save
-          token = JwtHelper.encode({ user_id: user.id })
+          token = Identity::Api.encode_token({ user_id: user.id })
           render json: { token: token }, status: :created
         else
           render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
@@ -12,9 +12,9 @@ module Api
       end
 
       def login
-        user = User.find_by(email: params[:email])
+        user = Identity::User.find_by(email: params[:email])
         if user&.authenticate(params[:password])
-          token = JwtHelper.encode({ user_id: user.id })
+          token = Identity::Api.encode_token({ user_id: user.id })
           render json: { token: token, user_id: user.id }, status: :ok
         else
           render json: { error: "Invalid email or password" }, status: :unauthorized

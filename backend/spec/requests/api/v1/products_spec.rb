@@ -1,10 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Products", type: :request do
-  let!(:user) { User.create!(name: "販売者", email: "seller@example.com", password: "password123") }
+  let!(:user) { Identity::User.create!(name: "販売者", email: "seller@example.com", password: "password123") }
 
   def auth_header(user)
-    token = JwtHelper.encode(user_id: user.id)
+    token = Identity::Api.encode_token(user_id: user.id)
     { "Authorization" => "Bearer #{token}" }
   end
 
@@ -56,8 +56,8 @@ RSpec.describe "Api::V1::Products", type: :request do
   end
 
   describe "DELETE /api/v1/products/:id" do
-    let!(:owner) { User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
-    let!(:other) { User.create!(name: "他ユーザー", email: "other@example.com", password: "password123") }
+    let!(:owner) { Identity::User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
+    let!(:other) { Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123") }
     let!(:product) { Product.create!(name: "削除対象商品", description: "説明", user: owner) }
 
     context "出品者本人の場合" do
@@ -250,7 +250,7 @@ RSpec.describe "Api::V1::Products", type: :request do
     end
 
     it "他人の商品は編集できない" do
-      other = User.create!(name: "他", email: "other@example.com", password: "password123")
+      other = Identity::User.create!(name: "他", email: "other@example.com", password: "password123")
 
       patch "/api/v1/products/#{product.id}",
             params: { name: "改ざん" },

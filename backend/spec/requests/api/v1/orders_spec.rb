@@ -1,15 +1,15 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Orders", type: :request do
-  let!(:user) { User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
+  let!(:user) { Identity::User.create!(name: "テストユーザー", email: "user@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: user) }
   let!(:variant) { product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
   let!(:product2) { Product.create!(name: "商品B", user: user) }
   let!(:variant2) { product2.product_variants.create!(price: 2000).tap { |v| v.stock.update!(quantity: 100) } }
-  let(:headers) { { "Authorization" => "Bearer #{JwtHelper.encode(user_id: user.id)}" } }
+  let(:headers) { { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: user.id)}" } }
 
   def auth_header(u)
-    { "Authorization" => "Bearer #{JwtHelper.encode(user_id: u.id)}" }
+    { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: u.id)}" }
   end
 
   describe "POST /api/v1/orders" do
@@ -152,7 +152,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     end
 
     context "クーポンを適用する場合" do
-      let!(:seller) { User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
+      let!(:seller) { Identity::User.create!(name: "出品者", email: "seller-coupon@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
       let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
 
@@ -330,7 +330,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       end
 
       it "他ユーザーの注文はキャンセルできない" do
-        other = User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
+        other = Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
         patch "/api/v1/orders/#{order.id}/cancel", headers: auth_header(other), as: :json
 
         expect(response).to have_http_status(:not_found)
@@ -347,7 +347,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     end
 
     context "クーポンが適用された注文の場合" do
-      let!(:seller) { User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
+      let!(:seller) { Identity::User.create!(name: "出品者", email: "seller-cancel@example.com", password: "password123") }
       let!(:coupon_product) { Product.create!(name: "対象商品", user: seller) }
       let!(:coupon_variant) { coupon_product.product_variants.create!(price: 1000).tap { |v| v.stock.update!(quantity: 100) } }
       let!(:coupon) do
@@ -452,7 +452,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     end
 
     it "他ユーザーの注文は404を返す" do
-      other = User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
+      other = Identity::User.create!(name: "他ユーザー", email: "other@example.com", password: "password123")
       get "/api/v1/orders/#{order.id}", headers: auth_header(other), as: :json
 
       expect(response).to have_http_status(:not_found)

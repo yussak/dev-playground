@@ -1,13 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Stocks", type: :request do
-  let!(:owner) { User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
-  let!(:other) { User.create!(name: "他人", email: "other@example.com", password: "password123") }
+  let!(:owner) { Identity::User.create!(name: "出品者", email: "owner@example.com", password: "password123") }
+  let!(:other) { Identity::User.create!(name: "他人", email: "other@example.com", password: "password123") }
   let!(:product) { Product.create!(name: "商品A", user: owner) }
   let!(:variant) { product.product_variants.create!(price: 1000) }
 
   def auth_header(u)
-    { "Authorization" => "Bearer #{JwtHelper.encode(user_id: u.id)}" }
+    { "Authorization" => "Bearer #{Identity::Api.encode_token(user_id: u.id)}" }
   end
 
   describe "PATCH /api/v1/product_variants/:product_variant_id/stock" do
