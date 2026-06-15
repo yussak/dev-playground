@@ -4,7 +4,7 @@ module Api
       before_action :authenticate_user!
 
       def show
-        cart = @current_user.cart
+        cart = Ordering::Cart.find_by(user_id: @current_user.id)
         if cart
           sync_stock_status(cart)
           render json: cart_json(cart)

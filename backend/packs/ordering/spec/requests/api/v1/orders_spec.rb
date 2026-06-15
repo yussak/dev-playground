@@ -15,7 +15,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
   describe "POST /api/v1/orders" do
     context "カートにアイテムがある場合" do
       before do
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 2)
         cart.cart_items.create!(product_variant: variant2, quantity: 1)
       end
@@ -31,7 +31,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         expect(body["items"].length).to eq(2)
         expect(body["total"]).to eq(4000)
 
-        expect(user.cart.cart_items.count).to eq(0)
+        expect(Ordering::Cart.find_by(user_id: user.id).cart_items.count).to eq(0)
       end
 
       it "注文アイテムにスナップショットが保存される" do
@@ -55,7 +55,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "在庫が不足している場合" do
       before do
         variant.stock.update!(quantity: 1)
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 2)
       end
 
@@ -72,7 +72,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "注文が成立した場合" do
       before do
         variant.stock.update!(quantity: 10)
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 3)
       end
 
@@ -95,7 +95,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       before do
         variant.stock.update!(quantity: 10)
         variant2.stock.update!(quantity: 0)
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 1)
         cart.cart_items.create!(product_variant: variant2, quantity: 1)
       end
@@ -115,7 +115,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       it "在庫切れのアイテムはカートに unavailable として残る" do
         post "/api/v1/orders", headers: headers, as: :json
 
-        remaining = user.cart.cart_items.reload
+        remaining = Ordering::Cart.find_by(user_id: user.id).cart_items.reload
         expect(remaining.count).to eq(1)
         expect(remaining.first.product_variant).to eq(variant2)
         expect(remaining.first.status).to eq("unavailable")
@@ -132,7 +132,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     context "削除済み商品のみの場合" do
       before do
         product.deleted!
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 1)
       end
 
@@ -162,7 +162,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         before do
-          cart = user.create_cart!
+          cart = Ordering::Cart.create!(user: user)
           cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
@@ -193,7 +193,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         it "対象商品を複数個カートに入れた場合、合計金額に対して割引" do
-          user.cart.cart_items.first.update!(quantity: 3)
+          Ordering::Cart.find_by(user_id: user.id).cart_items.first.update!(quantity: 3)
 
           post "/api/v1/orders", params: { coupon_code: "FIXED300" }, headers: headers, as: :json
 
@@ -215,7 +215,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         before do
-          cart = user.create_cart!
+          cart = Ordering::Cart.create!(user: user)
           cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
@@ -236,7 +236,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
       context "クーポンが無効な場合" do
         before do
-          cart = user.create_cart!
+          cart = Ordering::Cart.create!(user: user)
           cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
@@ -260,7 +260,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
         it "同ユーザーが2回目使うとエラー" do
           coupon = Promotion::Coupon.create!(product: coupon_product, code: "ONCE12345", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
-          first_order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
+          first_order = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed)
           Promotion::CouponUse.create!(coupon: coupon, user: user, order: first_order, status: :used)
 
           expect {
@@ -277,7 +277,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         end
 
         before do
-          cart = user.create_cart!
+          cart = Ordering::Cart.create!(user: user)
           cart.cart_items.create!(product_variant: variant, quantity: 1)
         end
 
@@ -292,7 +292,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
       context "クーポンコードなしの場合" do
         before do
-          cart = user.create_cart!
+          cart = Ordering::Cart.create!(user: user)
           cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
         end
 
@@ -309,7 +309,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
   describe "PATCH /api/v1/orders/:id/cancel" do
     let!(:order) do
-      order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
+      order = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed)
       order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
       order
     end
@@ -354,7 +354,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         Promotion::Coupon.create!(product: coupon_product, code: "CANCELME12", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
       end
       let!(:coupon_order) do
-        o = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
+        o = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
         o.order_items.create!(product_variant: coupon_variant, product_name: "対象商品", unit_price: 1000, quantity: 1)
         Promotion::CouponUse.create!(coupon: coupon, user: user, order: o, status: :used)
         o
@@ -369,7 +369,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       it "キャンセル後、同じユーザーが同じクーポンを再度使える" do
         patch "/api/v1/orders/#{coupon_order.id}/cancel", headers: headers, as: :json
 
-        cart = user.cart || user.create_cart!
+        cart = Ordering::Cart.find_by(user_id: user.id) || Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: coupon_variant, quantity: 1)
 
         post "/api/v1/orders", params: { coupon_code: "CANCELME12" }, headers: headers, as: :json
@@ -381,7 +381,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
   describe "GET /api/v1/orders" do
     before do
       2.times do |i|
-        order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
+        order = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed)
         order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: i + 1)
       end
     end
@@ -397,7 +397,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
     end
 
     it "割引が適用された注文は total が割引後の金額になる" do
-      discounted = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 150)
+      discounted = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 150)
       discounted.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
 
       get "/api/v1/orders", headers: headers, as: :json
@@ -417,7 +417,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
   describe "GET /api/v1/orders/:id" do
     let!(:order) do
-      order = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed)
+      order = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed)
       order.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 2)
       order
     end
@@ -436,7 +436,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
     context "割引が適用された注文の場合" do
       let!(:discounted_order) do
-        o = user.orders.create!(order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
+        o = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
         o.order_items.create!(product_variant: variant, product_name: "商品A", unit_price: 1000, quantity: 1)
         o
       end

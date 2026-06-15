@@ -16,16 +16,16 @@ RSpec.describe "Api::V1::Cart", type: :request do
         post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
 
         expect(response).to have_http_status(:created)
-        expect(user.cart.cart_items.count).to eq(1)
-        expect(user.cart.cart_items.first.quantity).to eq(1)
+        expect(Ordering::Cart.find_by(user_id: user.id).cart_items.count).to eq(1)
+        expect(Ordering::Cart.find_by(user_id: user.id).cart_items.first.quantity).to eq(1)
       end
 
       it "同じバリアントを再度追加すると数量が+1される" do
         post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
         post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
 
-        expect(user.cart.cart_items.count).to eq(1)
-        expect(user.cart.cart_items.first.quantity).to eq(2)
+        expect(Ordering::Cart.find_by(user_id: user.id).cart_items.count).to eq(1)
+        expect(Ordering::Cart.find_by(user_id: user.id).cart_items.first.quantity).to eq(2)
       end
 
       it "削除済み商品のバリアントは追加できない" do
@@ -46,12 +46,12 @@ RSpec.describe "Api::V1::Cart", type: :request do
         post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
 
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(user.cart&.cart_items&.count.to_i).to eq(0)
+        expect(Ordering::Cart.find_by(user_id: user.id)&.cart_items&.count.to_i).to eq(0)
       end
 
       it "既存のカート数量+1が在庫を超える場合は422を返す" do
         variant.stock.update!(quantity: 2)
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 2)
 
         post "/api/v1/cart/items", params: { product_variant_id: variant.id }, headers: headers, as: :json
@@ -73,7 +73,7 @@ RSpec.describe "Api::V1::Cart", type: :request do
   describe "GET /api/v1/cart" do
     context "カートにアイテムがある場合" do
       before do
-        cart = user.create_cart!
+        cart = Ordering::Cart.create!(user: user)
         cart.cart_items.create!(product_variant: variant, quantity: 2)
       end
 
@@ -163,7 +163,7 @@ RSpec.describe "Api::V1::Cart", type: :request do
   end
 
   describe "PATCH /api/v1/cart/items/:id" do
-    let!(:cart) { user.create_cart! }
+    let!(:cart) { Ordering::Cart.create!(user: user) }
     let!(:cart_item) { cart.cart_items.create!(product_variant: variant, quantity: 2) }
 
     context "認証済みの場合" do
@@ -198,7 +198,7 @@ RSpec.describe "Api::V1::Cart", type: :request do
   end
 
   describe "DELETE /api/v1/cart/items/:id" do
-    let!(:cart) { user.create_cart! }
+    let!(:cart) { Ordering::Cart.create!(user: user) }
     let!(:cart_item) { cart.cart_items.create!(product_variant: variant, quantity: 1) }
 
     context "認証済みの場合" do

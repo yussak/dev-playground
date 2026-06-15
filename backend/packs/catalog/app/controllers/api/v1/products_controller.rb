@@ -56,7 +56,7 @@ module Api
           return render json: { errors: [ "バリアントは1つ以上必要です" ] }, status: :unprocessable_entity
         end
 
-        product = @current_user.products.new(product_attributes)
+        product = Catalog::Product.new(user: @current_user, **product_attributes)
         variants.each do |attrs|
           product.product_variants.build(attrs.slice(:size, :color, :price))
         end

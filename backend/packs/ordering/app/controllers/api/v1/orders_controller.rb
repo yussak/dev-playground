@@ -4,19 +4,19 @@ module Api
       before_action :authenticate_user!
 
       def index
-        orders = @current_user.orders.order(created_at: :desc)
+        orders = Ordering::Order.where(user_id: @current_user.id).order(created_at: :desc)
         render json: orders.map { |order| order_summary_json(order) }
       end
 
       def show
-        order = @current_user.orders.find(params[:id])
+        order = Ordering::Order.where(user_id: @current_user.id).find(params[:id])
         render json: order_detail_json(order)
       rescue ActiveRecord::RecordNotFound
         render json: { error: "注文が見つかりません" }, status: :not_found
       end
 
       def create
-        cart = @current_user.cart
+        cart = Ordering::Cart.find_by(user_id: @current_user.id)
         if cart.nil? || cart.cart_items.empty?
           return render json: { error: "カートが空です" }, status: :unprocessable_entity
         end
@@ -58,7 +58,8 @@ module Api
 
           discount_amount = coupon_id ? Promotion::Api.calculate_discount(coupon_id: coupon_id, items: purchasable_items) : 0
 
-          order = @current_user.orders.create!(
+          order = Ordering::Order.create!(
+            user: @current_user,
             order_number: SecureRandom.uuid,
             status: :confirmed,
             discount_amount: discount_amount
@@ -96,7 +97,7 @@ module Api
       end
 
       def cancel
-        order = @current_user.orders.find(params[:id])
+        order = Ordering::Order.where(user_id: @current_user.id).find(params[:id])
 
         if order.cancelled?
           return render json: { error: "すでにキャンセル済みです" }, status: :unprocessable_entity

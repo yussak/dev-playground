@@ -4,7 +4,7 @@ module Api
       before_action :authenticate_user!
 
       def create
-        cart = @current_user.cart || @current_user.create_cart!
+        cart = Ordering::Cart.find_by(user_id: @current_user.id) || Ordering::Cart.create!(user: @current_user)
         variant = Catalog::ProductVariant.joins(:product)
                                 .includes(:stock)
                                 .where(products: { status: "active" })
@@ -56,7 +56,7 @@ module Api
       private
 
       def find_cart_item
-        @current_user.cart&.cart_items&.find(params[:id]) || raise(ActiveRecord::RecordNotFound)
+        Ordering::Cart.find_by(user_id: @current_user.id)&.cart_items&.find(params[:id]) || raise(ActiveRecord::RecordNotFound)
       end
     end
   end
