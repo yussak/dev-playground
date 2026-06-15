@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,17 +143,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_000001) do
   end
 
   add_foreign_key "cart_items", "carts"
-  add_foreign_key "cart_items", "product_variants"
+  add_foreign_key "cart_items", "product_variants", on_delete: :cascade
   add_foreign_key "carts", "users"
-  add_foreign_key "coupon_uses", "coupons"
+  add_foreign_key "coupon_uses", "coupons", on_delete: :cascade
   add_foreign_key "coupon_uses", "orders"
   add_foreign_key "coupon_uses", "users"
-  add_foreign_key "coupons", "products"
+  add_foreign_key "coupons", "products", on_delete: :cascade
   add_foreign_key "order_items", "orders"
-  add_foreign_key "order_items", "product_variants"
+  add_foreign_key "order_items", "product_variants", on_delete: :nullify
   add_foreign_key "orders", "users"
-  add_foreign_key "product_images", "products"
-  add_foreign_key "product_variants", "products"
+  add_foreign_key "product_images", "products", on_delete: :cascade
+  add_foreign_key "product_variants", "products", on_delete: :cascade
   add_foreign_key "products", "users"
-  add_foreign_key "stocks", "product_variants"
+  add_foreign_key "stocks", "product_variants", on_delete: :cascade
 end
