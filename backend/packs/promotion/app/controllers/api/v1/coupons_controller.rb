@@ -9,7 +9,7 @@ module Api
           return render json: { error: "権限がありません" }, status: :forbidden
         end
 
-        render json: Array(product.coupon).compact
+        render json: Array(Promotion::Coupon.find_by(product_id: product.id)).compact
       rescue ActiveRecord::RecordNotFound
         render json: { error: "商品が見つかりません" }, status: :not_found
       end
@@ -20,11 +20,11 @@ module Api
           return render json: { error: "権限がありません" }, status: :forbidden
         end
 
-        if product.coupon.present?
+        if Promotion::Coupon.exists?(product_id: product.id)
           return render json: { errors: [ "この商品には既にクーポンが存在します" ] }, status: :unprocessable_entity
         end
 
-        coupon = product.build_coupon(coupon_params)
+        coupon = Promotion::Coupon.new(coupon_params.merge(product: product))
         coupon.code = SecureRandom.alphanumeric(16)
 
         if coupon.save

@@ -6,10 +6,6 @@ module Catalog
     belongs_to :user, class_name: "Identity::User"
     has_many :product_images, dependent: :destroy
     has_many :product_variants, dependent: :destroy
-    has_many :cart_items, through: :product_variants
-    has_many :order_items, through: :product_variants
-    # coupon は promotion の所有。規約推論だと存在しない top-level Coupon を探すため明示
-    has_one :coupon, class_name: "Promotion::Coupon", dependent: :destroy
 
     enum :status, { active: "active", deleted: "deleted" }
 
