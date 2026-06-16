@@ -1,7 +1,6 @@
-# modular-monolith-practice
+# dev-playground
 
-モジュラーモノリスアーキテクチャの学習・実験用リポジトリ
-ECサイトを作って練習しています
+ECサイトを土台に、モジュラーモノリスやBFFなど様々なアーキテクチャ・開発手法を試す実験用リポジトリ
 
 ## 概要
 
@@ -25,6 +24,14 @@ ECサイトを作って練習しています
 - **Rails でのモジュール実装**: `rails engine` や名前空間を使った実装パターンの比較
 - **モノリスとマイクロサービスのトレードオフ**: 実装を通じて両者の違いを体感する
 
+## 実験ブランチ
+
+各実験はブランチで保管し、main には merge しない方針です。main は素のモノリス（学習の出発点）として維持し、新しい学習トピックは常に main から派生します。
+
+| ブランチ | 内容 | PR |
+|---|---|---|
+| [mm-first](https://github.com/yussak/dev-playground/tree/mm-first) | Packwerk によるモジュラモノリス移行（4 pack: identity / catalog / promotion / ordering） | [#136](https://github.com/yussak/dev-playground/pull/136) |
+
 ## セットアップ
 
 ### 前提条件
@@ -37,7 +44,7 @@ ECサイトを作って練習しています
 
 ```bash
 git clone <repo-url>
-cd modular-monolith-practice
+cd dev-playground
 ```
 
 2. 環境変数ファイルを作成
