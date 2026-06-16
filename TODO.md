@@ -21,7 +21,7 @@ TODO:ここに書いてないけどやったこと、例えばSHA固定なども
 - [x] 注文確定（住所入力・決済はモック）
 - [x] 注文履歴の確認
 
-クーポン・割引 → [#36](https://github.com/yussak/modular-monolith-practice/issues/36)
+クーポン・割引 → [#36](https://github.com/yussak/dev-playground/issues/36)
 
 ## Phase 2: モジュール分離（モジュラーモノリス練習）
 
