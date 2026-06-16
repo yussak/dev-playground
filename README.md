@@ -24,6 +24,14 @@ ECサイトを土台に、モジュラーモノリスやBFFなど様々なアー
 - **Rails でのモジュール実装**: `rails engine` や名前空間を使った実装パターンの比較
 - **モノリスとマイクロサービスのトレードオフ**: 実装を通じて両者の違いを体感する
 
+## 実験ブランチ
+
+各実験はブランチで保管し、main には merge しない方針です。main は素のモノリス（学習の出発点）として維持し、新しい学習トピックは常に main から派生します。
+
+| ブランチ | 内容 | PR |
+|---|---|---|
+| [mm-first](https://github.com/yussak/dev-playground/tree/mm-first) | Packwerk によるモジュラモノリス移行（4 pack: identity / catalog / promotion / ordering） | [#136](https://github.com/yussak/dev-playground/pull/136) |
+
 ## セットアップ
 
 ### 前提条件
