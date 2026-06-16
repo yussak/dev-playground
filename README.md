@@ -1,7 +1,6 @@
-# modular-monolith-practice
+# dev-playground
 
-モジュラーモノリスアーキテクチャの学習・実験用リポジトリ
-ECサイトを作って練習しています
+ECサイトを土台に、モジュラーモノリスやBFFなど様々なアーキテクチャ・開発手法を試す実験用リポジトリ
 
 ## 概要
 
@@ -37,7 +36,7 @@ ECサイトを作って練習しています
 
 ```bash
 git clone <repo-url>
-cd modular-monolith-practice
+cd dev-playground
 ```
 
 2. 環境変数ファイルを作成
