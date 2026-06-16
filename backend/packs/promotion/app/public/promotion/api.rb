@@ -21,7 +21,7 @@ module Promotion
     end
 
     def self.record_usage(coupon_id:, user:, order:)
-      CouponUse.create!(coupon_id: coupon_id, user: user, order: order, status: :used)
+      CouponUse.create!(coupon_id: coupon_id, user: user, order_id: order.id, status: :used)
     end
 
     def self.cancel_usage(order_id)

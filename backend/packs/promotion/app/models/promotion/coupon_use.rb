@@ -7,11 +7,11 @@ module Promotion
     belongs_to :coupon  # どのクーポンが使われたか
     # user は identity の所有。規約推論だと存在しない top-level User を探すため明示
     belongs_to :user, class_name: "Identity::User"  # 誰が使ったか（1ユーザー1回制限の判定に必要）
-    # order は ordering の所有。規約推論だと存在しない top-level Order を探すため明示
-    belongs_to :order, class_name: "Ordering::Order"  # どの注文で使われたか（キャンセル時にどの使用記録を削除するか特定するために必要）
+    # order_id はキャンセル時にどの使用記録を削除するか特定するために必要（ordering pack 所有のため belongs_to は持たず id だけ保持）
 
     enum :status, { unused: "unused", used: "used" }
 
     validates :status, presence: true
+    validates :order_id, presence: true
   end
 end

@@ -261,7 +261,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "同ユーザーが2回目使うとエラー" do
           coupon = Promotion::Coupon.create!(product: coupon_product, code: "ONCE12345", discount_type: "fixed", discount_value: 300, expires_at: 1.month.from_now)
           first_order = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed)
-          Promotion::CouponUse.create!(coupon: coupon, user: user, order: first_order, status: :used)
+          Promotion::CouponUse.create!(coupon: coupon, user: user, order_id: first_order.id, status: :used)
 
           expect {
             post "/api/v1/orders", params: { coupon_code: "ONCE12345" }, headers: headers, as: :json
@@ -356,7 +356,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
       let!(:coupon_order) do
         o = Ordering::Order.create!(user: user, order_number: SecureRandom.uuid, status: :confirmed, discount_amount: 300)
         o.order_items.create!(product_variant: coupon_variant, product_name: "対象商品", unit_price: 1000, quantity: 1)
-        Promotion::CouponUse.create!(coupon: coupon, user: user, order: o, status: :used)
+        Promotion::CouponUse.create!(coupon: coupon, user: user, order_id: o.id, status: :used)
         o
       end
 
