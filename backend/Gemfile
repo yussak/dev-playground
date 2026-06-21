@@ -52,9 +52,9 @@ group :development, :test do
   gem "packwerk", "3.3.0"
 
   # Type checking [https://sorbet.org/]
-  gem "sorbet", "0.6.13297"
+  gem "sorbet", "0.6.13308"
   gem "tapioca", "0.19.1", require: false
 end
 
 # sorbet-runtime is loaded in all environments so sig runs in production too
-gem "sorbet-runtime", "0.6.13297"
+gem "sorbet-runtime", "0.6.13308"
