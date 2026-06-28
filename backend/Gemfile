@@ -53,7 +53,7 @@ group :development, :test do
 
   # Type checking [https://sorbet.org/]
   gem "sorbet", "0.6.13308"
-  gem "tapioca", "0.19.1", require: false
+  gem "tapioca", "0.19.2", require: false
 end
 
 # sorbet-runtime is loaded in all environments so sig runs in production too
