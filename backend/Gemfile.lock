@@ -178,19 +178,19 @@ GEM
     nokogiri (1.19.4-x86_64-linux-gnu)
       racc (~> 1.4)
     ostruct (0.6.3)
-    packwerk (3.3.0)
+    packwerk (3.3.1)
       activesupport (>= 6.0)
       ast
       benchmark
       better_html
       bundler
       constant_resolver (>= 0.3)
-      parallel (< 2)
+      parallel
       parser
       prism (>= 1.4.0)
       zeitwerk (>= 2.6.1)
-    parallel (1.28.0)
-    parser (3.3.10.2)
+    parallel (2.1.0)
+    parser (3.3.12.0)
       ast (~> 2.4.1)
       racc
     pg (1.6.3-aarch64-linux)
@@ -280,11 +280,11 @@ GEM
       rspec-mocks (>= 3.13.0, < 5.0.0)
       rspec-support (>= 3.13.0, < 5.0.0)
     rspec-support (3.13.7)
-    rubocop (1.84.2)
-      json (~> 2.3)
+    rubocop (1.90.0)
+      json (>= 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
-      parallel (~> 1.10)
+      parallel (>= 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
@@ -394,7 +394,7 @@ DEPENDENCIES
   debug
   jwt
   kamal
-  packwerk (= 3.3.0)
+  packwerk (= 3.3.1)
   pg (~> 1.1)
   puma (>= 5.0)
   rack-cors
